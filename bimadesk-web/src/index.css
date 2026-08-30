@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-paper text-ink font-body text-[14px];
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-ink;
+  }
+  :focus-visible {
+    outline: 2px solid theme("colors.violet.500");
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme("colors.line");
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  .wb-card {
+    @apply bg-paper-raised border border-line rounded-card shadow-card;
+  }
+  .wb-tab-card {
+    @apply bg-paper-raised border border-line rounded-tab shadow-card;
+  }
+  .wb-glass {
+    @apply bg-white/60 backdrop-blur-glass border border-white/70 rounded-glass shadow-glass;
+  }
+  .wb-glass-dark {
+    @apply bg-white/10 backdrop-blur-glass border border-white/20 rounded-glass shadow-glass;
+  }
+  .wb-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-violet-500 text-white text-[13px] font-medium
+      px-3.5 py-2 rounded-[10px] hover:bg-violet-600 transition-all
+      disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98];
+  }
+  .wb-btn-accent {
+    @apply inline-flex items-center justify-center gap-2 bg-amber-500 text-white text-[13px] font-medium
+      px-3.5 py-2 rounded-[10px] hover:bg-amber-600 transition-all
+      disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98];
+  }
+  .wb-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-transparent border border-line text-ink text-[13px]
+      font-medium px-3.5 py-2 rounded-[10px] hover:bg-paper-sunk transition-all active:scale-[0.98];
+  }
+  .wb-btn-ghost {
+    @apply inline-flex items-center gap-1.5 text-ink-soft text-[13px] font-medium
+      px-2 py-1.5 rounded-[8px] hover:bg-paper-sunk hover:text-ink transition-colors;
+  }
+  .wb-input {
+    @apply w-full bg-paper-raised border border-line rounded-[10px] px-3 py-2 text-[13px]
+      text-ink placeholder:text-ink-faint focus:border-violet-300 focus:ring-2 focus:ring-violet-100 transition-all;
+  }
+  .wb-label {
+    @apply block text-[12px] font-medium text-ink-soft mb-1;
+  }
+  .wb-select {
+    @apply w-full bg-paper-raised border border-line rounded-[10px] px-3 py-2 text-[13px] text-ink;
+  }
+  .wb-aurora-bg {
+    background: radial-gradient(circle at 15% 20%, rgba(109, 60, 229, 0.55), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(255, 138, 30, 0.45), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(18, 183, 106, 0.35), transparent 50%),
+      #1B1330;
+    background-size: 200% 200%;
+    animation: wb-aurora-shift 18s ease-in-out infinite;
+  }
+}
+
+@keyframes wb-aurora-shift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 60%; }
+  100% { background-position: 0% 0%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
