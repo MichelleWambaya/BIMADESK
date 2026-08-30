@@ -10,6 +10,7 @@ import { RenewalGauge } from "@/components/shared/RenewalGauge";
 import { expiringPoliciesSorted } from "@/lib/dashboardSelectors";
 import { clientDisplayName } from "@/types";
 import { InsuranceTypeBadge } from "@/components/shared/StatusBadge";
+import { Avatar } from "@/components/shared/Avatar";
 import { formatDate } from "@/lib/date";
 
 export function Dashboard() {
@@ -22,9 +23,12 @@ export function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-[20px] font-semibold">Good to see you, {firstName}.</h1>
-        <p className="text-[13px] text-ink-soft mt-0.5">Here's what needs your attention today.</p>
+      <div className="flex items-center gap-3">
+        <Avatar name={profile?.fullName || "You"} seed={profile?.id} size="lg" className="hidden sm:flex" />
+        <div>
+          <h1 className="text-[20px] font-semibold">Good to see you, {firstName}.</h1>
+          <p className="text-[13px] text-ink-soft mt-0.5">Here's what needs your attention today.</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -34,7 +38,7 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 wb-card p-4">
+        <div className="lg:col-span-2 wb-glass-card p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[13px] font-semibold text-ink-soft uppercase tracking-wide">Policies expiring soon</h3>
             <button className="wb-btn-ghost text-[12px]" onClick={() => navigate("/app/renewals")}>View all</button>
@@ -68,14 +72,19 @@ export function Dashboard() {
         <RecentActivity />
       </div>
 
-      <div className="wb-card p-4">
+      <div className="wb-glass-card p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[13px] font-semibold text-ink-soft uppercase tracking-wide">Recently added clients</h3>
           <button className="wb-btn-ghost text-[12px]" onClick={() => navigate("/app/clients")}>View all</button>
         </div>
         <div className="flex flex-wrap gap-2">
           {recentClients.map((c) => (
-            <button key={c.id} onClick={() => navigate(`/app/clients/${c.id}`)} className="wb-btn-secondary !text-[12.5px]">
+            <button
+              key={c.id}
+              onClick={() => navigate(`/app/clients/${c.id}`)}
+              className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border border-line/70 bg-white/50 hover:bg-white/80 transition-colors text-[12.5px]"
+            >
+              <Avatar name={clientDisplayName(c)} seed={c.id} size="xs" />
               {clientDisplayName(c)}
             </button>
           ))}
