@@ -15,12 +15,12 @@ export default {
           faint: "#8D87A8",
         },
         violet: {
-          50: "#F1EEFF",
-          100: "#DCD3FF",
-          300: "#A78BFA",
-          500: "#6D3CE5",
-          600: "#5B2FC2",
-          700: "#472399",
+          50: "var(--accent-50, #F1EEFF)",
+          100: "var(--accent-100, #DCD3FF)",
+          300: "var(--accent-300, #A78BFA)",
+          500: "var(--accent-500, #6D3CE5)",
+          600: "var(--accent-600, #5B2FC2)",
+          700: "var(--accent-700, #472399)",
         },
         amber: {
           50: "#FFF4E5",
