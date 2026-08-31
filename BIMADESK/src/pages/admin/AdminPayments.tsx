@@ -43,16 +43,16 @@ export function AdminPayments() {
     <div className="space-y-5">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-white font-display text-xl">Payments</h1>
-          <p className="text-white/70 text-[13px]">Every M-Pesa and card payment across the platform.</p>
+          <h1 className="text-black font-display text-xl">Payments</h1>
+          <p className="text-black/70 text-[13px]">Every M-Pesa and card payment across the platform.</p>
         </div>
-        <p className="text-white font-display text-lg">KES {totalSuccessKes.toLocaleString()}</p>
+        <p className="text-black font-display text-lg">KES {totalSuccessKes.toLocaleString()}</p>
       </div>
 
       <div className="wb-glass-dark overflow-hidden">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="border-b border-white/10 text-white/75 text-left text-[11.5px]">
+            <tr className="border-b border-white/10 text-black/75 text-left text-[11.5px]">
               <th className="px-4 py-2.5 font-medium">Business</th>
               <th className="px-4 py-2.5 font-medium">Amount</th>
               <th className="px-4 py-2.5 font-medium">Method</th>
@@ -63,20 +63,20 @@ export function AdminPayments() {
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-b border-white/5 last:border-0">
-                <td className="px-4 py-2.5 text-white">{r.orgName}</td>
-                <td className="px-4 py-2.5 text-white/85">KES {r.amountKes.toLocaleString()}</td>
-                <td className="px-4 py-2.5 text-white/85 capitalize">{r.provider === "mpesa" ? "M-Pesa" : "Card"}</td>
+                <td className="px-4 py-2.5 text-black">{r.orgName}</td>
+                <td className="px-4 py-2.5 text-black/85">KES {r.amountKes.toLocaleString()}</td>
+                <td className="px-4 py-2.5 text-black/85 capitalize">{r.provider === "mpesa" ? "M-Pesa" : "Card"}</td>
                 <td className="px-4 py-2.5">
-                  <span className={`text-[11px] px-2 py-0.5 rounded-full ${r.status === "success" ? "bg-emerald-500/20 text-emerald-300" : r.status === "failed" ? "bg-coral-500/20 text-coral-300" : "bg-white/10 text-white/50"}`}>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full ${r.status === "success" ? "bg-emerald-500/20 text-emerald-300" : r.status === "failed" ? "bg-coral-500/20 text-coral-300" : "bg-white/10 text-black/50"}`}>
                     {r.status}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-white/70">{formatDateTime(r.createdAt)}</td>
+                <td className="px-4 py-2.5 text-black/70">{formatDateTime(r.createdAt)}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {!loading && rows.length === 0 && <p className="text-white/60 text-[13px] p-6 text-center">No payments yet.</p>}
+        {!loading && rows.length === 0 && <p className="text-black/60 text-[13px] p-6 text-center">No payments yet.</p>}
       </div>
     </div>
   );
