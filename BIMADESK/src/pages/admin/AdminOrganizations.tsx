@@ -71,13 +71,13 @@ export function AdminOrganizations() {
     <div className="space-y-5">
       <div>
         <h1 className="text-white font-display text-xl">Organizations</h1>
-        <p className="text-white/50 text-[13px]">Every business using BimaDesk, and their current plan.</p>
+        <p className="text-white/70 text-[13px]">Every business using BimaDesk, and their current plan.</p>
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-[14px] overflow-hidden">
+      <div className="wb-glass-dark overflow-hidden">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="border-b border-white/10 text-white/50 text-left text-[11.5px]">
+            <tr className="border-b border-white/10 text-white/75 text-left text-[11.5px]">
               <th className="px-4 py-2.5 font-medium">Business</th>
               <th className="px-4 py-2.5 font-medium">Clients</th>
               <th className="px-4 py-2.5 font-medium">Plan</th>
@@ -89,8 +89,8 @@ export function AdminOrganizations() {
             {rows.map((r) => (
               <tr key={r.id} className="border-b border-white/5 last:border-0">
                 <td className="px-4 py-2.5 text-white">{r.name}</td>
-                <td className="px-4 py-2.5 text-white/70">{r.clientCount}</td>
-                <td className="px-4 py-2.5 text-white/70">{r.planName}</td>
+                <td className="px-4 py-2.5 text-white/85">{r.clientCount}</td>
+                <td className="px-4 py-2.5 text-white/85">{r.planName}</td>
                 <td className="px-4 py-2.5">
                   <span className={`text-[11px] px-2 py-0.5 rounded-full ${r.status === "active" ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-white/50"}`}>
                     {r.status}
@@ -111,7 +111,7 @@ export function AdminOrganizations() {
             ))}
           </tbody>
         </table>
-        {!loading && rows.length === 0 && <p className="text-white/40 text-[13px] p-6 text-center">No organizations yet.</p>}
+        {!loading && rows.length === 0 && <p className="text-white/60 text-[13px] p-6 text-center">No organizations yet.</p>}
       </div>
     </div>
   );
