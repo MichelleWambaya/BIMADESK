@@ -9,6 +9,7 @@ import { clientDisplayName } from "@/types";
 import { useQuickActions } from "@/components/layout/QuickActions";
 import { StatusBadge, InsuranceTypeBadge } from "@/components/shared/StatusBadge";
 import { RenewalGauge } from "@/components/shared/RenewalGauge";
+import { EditableDate } from "@/components/shared/EditableDate";
 import { ActivityTimeline } from "./ActivityTimeline";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -187,7 +188,10 @@ export function ClientProfile() {
                     <RenewalGauge expiryDate={p.endDate} size={36} />
                     <div className="flex-1 min-w-0">
                       <p className="text-[13.5px] font-medium">{p.policyNumber}</p>
-                      <p className="text-[11.5px] text-ink-faint">{p.insurer} · {formatDate(p.startDate)} to {formatDate(p.endDate)}</p>
+                      <p className="text-[11.5px] text-ink-faint">
+                        {p.insurer} · started {formatDate(p.startDate)} · expires{" "}
+                        <EditableDate value={p.endDate} onSave={(newDate) => store.updatePolicyEndDate(p.id, newDate)} align="left" />
+                      </p>
                     </div>
                     {type && <InsuranceTypeBadge label={type.label} color={type.color} />}
                     <span className="text-[12.5px] font-mono w-24 text-right">KES {p.premiumKes.toLocaleString()}</span>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Search, User2, FileText, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/data/appStore";
@@ -17,20 +17,6 @@ export function SearchBar() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  // Race-free click-outside close -- see QuickAddMenu.tsx for why the old
-  // onBlur + setTimeout pattern could eat the first click on a result.
-  useEffect(() => {
-    if (!open) return;
-    function onPointerDown(e: PointerEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
 
   const hits = useMemo<Hit[]>(() => {
     const q = query.trim().toLowerCase();
@@ -76,7 +62,7 @@ export function SearchBar() {
   const icon = { client: User2, policy: FileText, quote: ClipboardList } as const;
 
   return (
-    <div className="relative w-full max-w-sm" ref={rootRef}>
+    <div className="relative w-full max-w-sm">
       <div className="flex items-center gap-2 bg-paper-sunk border border-line rounded-[8px] px-3 py-1.5">
         <Search size={15} className="text-ink-faint" />
         <input
@@ -86,12 +72,13 @@ export function SearchBar() {
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 120)}
           placeholder="Search clients, policies, quotes…"
           className="bg-transparent outline-none text-[13px] w-full placeholder:text-ink-faint"
         />
       </div>
       {open && hits.length > 0 && (
-        <div className="absolute mt-1.5 w-full wb-glass-card z-40 max-h-80 overflow-y-auto py-1">
+        <div className="absolute mt-1.5 w-full wb-card z-40 max-h-80 overflow-y-auto py-1">
           {hits.map((h) => {
             const Icon = icon[h.kind];
             return (

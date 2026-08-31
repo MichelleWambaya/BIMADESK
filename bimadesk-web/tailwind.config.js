@@ -1,26 +1,27 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: ["selector", '[data-theme="dark"]'],
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
         paper: {
-          DEFAULT: "#F5F2FC",
-          raised: "#FFFFFF",
-          sunk: "#ECE6F9",
+          DEFAULT: "rgb(var(--color-paper) / <alpha-value>)",
+          raised: "rgb(var(--color-paper-raised) / <alpha-value>)",
+          sunk: "rgb(var(--color-paper-sunk) / <alpha-value>)",
         },
         ink: {
-          DEFAULT: "#17131F",
-          soft: "#55506B",
-          faint: "#8D87A8",
+          DEFAULT: "rgb(var(--color-ink) / <alpha-value>)",
+          soft: "rgb(var(--color-ink-soft) / <alpha-value>)",
+          faint: "rgb(var(--color-ink-faint) / <alpha-value>)",
         },
         violet: {
-          50: "var(--accent-50, #F1EEFF)",
-          100: "var(--accent-100, #DCD3FF)",
-          300: "var(--accent-300, #A78BFA)",
-          500: "var(--accent-500, #6D3CE5)",
-          600: "var(--accent-600, #5B2FC2)",
-          700: "var(--accent-700, #472399)",
+          50: "#F1EEFF",
+          100: "#DCD3FF",
+          300: "#A78BFA",
+          500: "#6D3CE5",
+          600: "#5B2FC2",
+          700: "#472399",
         },
         amber: {
           50: "#FFF4E5",
@@ -43,7 +44,7 @@ export default {
           500: "#FF5A3C",
           600: "#E23E22",
         },
-        line: "#E2DAF4",
+        line: "rgb(var(--color-line) / <alpha-value>)",
       },
       fontFamily: {
         display: ["'Space Grotesk'", "sans-serif"],

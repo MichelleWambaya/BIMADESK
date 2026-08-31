@@ -78,6 +78,17 @@ export interface Subscription {
   planId: ID;
   status: SubscriptionStatus;
   currentPeriodEnd?: string;
+  autoRenew: boolean;
+}
+
+export interface SavedPaymentMethod {
+  id: ID;
+  organizationId: ID;
+  cardLast4?: string;
+  cardType?: string;
+  expMonth?: string;
+  expYear?: string;
+  reusable: boolean;
 }
 
 export type PaymentProvider = "mpesa" | "paystack";
@@ -266,6 +277,8 @@ export type CallOutcome =
   | "no_answer" | "interested" | "not_interested" | "call_back_later"
   | "requested_quotation" | "renewal_confirmed" | "needs_information" | "other";
 
+export type DeliveryStatus = "simulated" | "queued" | "sent" | "failed";
+
 export interface Communication {
   id: ID;
   organizationId: ID;
@@ -279,6 +292,9 @@ export interface Communication {
   callOutcome?: CallOutcome;
   templateId?: ID;
   simulated: boolean;
+  deliveryStatus: DeliveryStatus;
+  providerMessageId?: string;
+  errorMessage?: string;
   occurredAt: string;
 }
 
@@ -303,6 +319,7 @@ export interface StoredDocument {
   fileName: string;
   category?: string;
   sizeBytes?: number;
+  storagePath?: string;
   uploadedAt: string;
 }
 
@@ -369,4 +386,16 @@ export interface Activity {
 
 export interface RenewalReminderPlan {
   offsetsDaysBeforeExpiry: number[];
+}
+
+// --- Team invites ------------------------------------------------------------------------------
+
+export interface TeamInvite {
+  id: ID;
+  organizationId: ID;
+  code: string;
+  role: "admin_user" | "member";
+  acceptedAt?: string;
+  createdAt: string;
+  expiresAt: string;
 }

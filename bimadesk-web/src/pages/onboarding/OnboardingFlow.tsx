@@ -4,17 +4,18 @@ import { Check, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { PaymentPanel } from "@/components/subscription/PaymentPanel";
-import { supabase } from "@/lib/supabaseClient";
 
 type Step = "welcome" | "profile" | "plan" | "payment" | "done";
 
 const AVATAR_COLORS = ["violet", "amber", "emerald", "coral"];
 const COLOR_HEX: Record<string, string> = { violet: "#6D3CE5", amber: "#FF8A1E", emerald: "#12B76A", coral: "#FF5A3C" };
+const PENDING_INVITE_KEY = "bimadesk_pending_invite";
 
 export function OnboardingFlow() {
-  const { profile, updateProfile, completeSignupSetup, refreshProfile } = useAuth();
+  const { profile, updateProfile, completeSignupSetup, acceptTeamInvite, refreshProfile } = useAuth();
   const { plans, refreshSubscription } = useSubscription();
   const navigate = useNavigate();
+  const pendingInviteCode = sessionStorage.getItem(PENDING_INVITE_KEY);
 
   const [step, setStep] = useState<Step>("welcome");
   const [fullName, setFullName] = useState(profile?.fullName ?? "");
@@ -29,11 +30,27 @@ export function OnboardingFlow() {
 
   async function saveProfileAndContinue(e: React.FormEvent) {
     e.preventDefault();
-    if (!fullName.trim() || !businessName.trim() || !phone.trim()) {
-      return setError("Fill in your name, business name, and phone number.");
+    if (!fullName.trim() || !phone.trim() || (!pendingInviteCode && !businessName.trim())) {
+      return setError(pendingInviteCode ? "Fill in your name and phone number." : "Fill in your name, business name, and phone number.");
     }
     setSubmitting(true);
     setError(null);
+
+    if (pendingInviteCode) {
+      // Joining an existing organization, not starting a new one -- skip
+      // straight to done, since the plan is already whatever the owner
+      // is subscribed to.
+      const { error } = await acceptTeamInvite(pendingInviteCode);
+      if (error) {
+        setSubmitting(false);
+        return setError(error);
+      }
+      sessionStorage.removeItem(PENDING_INVITE_KEY);
+      await updateProfile({ fullName, phone, avatarColor });
+      setSubmitting(false);
+      await finishOnboarding();
+      return;
+    }
 
     // If there is no organization yet, create one now (covers both the
     // immediate-session signup path and the confirm-email-then-login path).
@@ -94,16 +111,20 @@ export function OnboardingFlow() {
           <form onSubmit={saveProfileAndContinue} className="wb-glass-dark p-7 space-y-4">
             <div>
               <h2 className="font-display text-white text-lg">Customize your profile</h2>
-              <p className="text-white/60 text-[12.5px] mt-1">This is how your workspace will look and how clients see your name on messages.</p>
+              <p className="text-white/60 text-[12.5px] mt-1">
+                {pendingInviteCode ? "This is how your teammates and clients will see your name." : "This is how your workspace will look and how clients see your name on messages."}
+              </p>
             </div>
             <div>
               <label className="block text-[12px] font-medium text-white/80 mb-1">Your name</label>
               <input className="w-full bg-white/10 border border-white/25 rounded-[10px] px-3 py-2 text-[13px] text-white placeholder:text-white/40" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Amina Njoroge" />
             </div>
-            <div>
-              <label className="block text-[12px] font-medium text-white/80 mb-1">Business name</label>
-              <input className="w-full bg-white/10 border border-white/25 rounded-[10px] px-3 py-2 text-[13px] text-white placeholder:text-white/40" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Njoroge Insurance Agency" />
-            </div>
+            {!pendingInviteCode && (
+              <div>
+                <label className="block text-[12px] font-medium text-white/80 mb-1">Business name</label>
+                <input className="w-full bg-white/10 border border-white/25 rounded-[10px] px-3 py-2 text-[13px] text-white placeholder:text-white/40" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Njoroge Insurance Agency" />
+              </div>
+            )}
             <div>
               <label className="block text-[12px] font-medium text-white/80 mb-1">Phone</label>
               <input className="w-full bg-white/10 border border-white/25 rounded-[10px] px-3 py-2 text-[13px] text-white placeholder:text-white/40" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="07XX XXX XXX" />

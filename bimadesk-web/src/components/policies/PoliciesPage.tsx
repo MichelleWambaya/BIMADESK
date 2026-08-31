@@ -5,9 +5,9 @@ import { useApp } from "@/data/appStore";
 import { clientDisplayName, PolicyStatus } from "@/types";
 import { StatusBadge, InsuranceTypeBadge } from "@/components/shared/StatusBadge";
 import { RenewalGauge } from "@/components/shared/RenewalGauge";
+import { EditableDate } from "@/components/shared/EditableDate";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useQuickActions } from "@/components/layout/QuickActions";
-import { formatDate } from "@/lib/date";
 
 const STATUSES: PolicyStatus[] = ["quotation", "pending", "active", "expiring", "renewed", "cancelled", "expired", "lost"];
 
@@ -57,10 +57,15 @@ export function PoliciesPage() {
             const client = store.clientById(p.clientId);
             const type = store.insuranceTypes.find((t) => t.id === p.insuranceTypeId);
             return (
-              <button
+              <div
                 key={p.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate(`/app/clients/${p.clientId}`)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-paper-sunk text-left"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") navigate(`/app/clients/${p.clientId}`);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-paper-sunk text-left cursor-pointer"
               >
                 <RenewalGauge expiryDate={p.endDate} size={34} />
                 <div className="flex-1 min-w-0">
@@ -71,9 +76,11 @@ export function PoliciesPage() {
                 </div>
                 {type && <InsuranceTypeBadge label={type.label} color={type.color} />}
                 <span className="text-[12px] font-mono w-24 text-right hidden sm:block">KES {p.premiumKes.toLocaleString()}</span>
-                <span className="text-[11.5px] text-ink-faint w-20 text-right hidden sm:block">{formatDate(p.endDate)}</span>
+                <div className="w-20 hidden sm:block">
+                  <EditableDate value={p.endDate} onSave={(newDate) => store.updatePolicyEndDate(p.id, newDate)} />
+                </div>
                 <StatusBadge status={p.status} kind="policy" />
-              </button>
+              </div>
             );
           })}
         </div>

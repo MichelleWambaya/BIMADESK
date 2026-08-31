@@ -36,10 +36,18 @@ export function CallModal({ clientId, onDone }: { clientId: string; onDone: () =
           {(client?.firstName ?? client?.companyName ?? "?").slice(0, 1)}
         </div>
         <div className="text-center">
-          <p className="text-[15px] font-medium">Calling {client?.phone}</p>
-          <p className="text-[12px] text-ink-faint mt-1">Simulated call. No real dialer is connected in this prototype.</p>
+          <p className="text-[15px] font-medium">{client?.phone}</p>
+          <p className="text-[12px] text-ink-faint mt-1">
+            Opens your phone's dialer or whatever handles calls on this device. BimaDesk can't detect when the call ends, so
+            log the outcome yourself once you're done.
+          </p>
         </div>
-        <button className="wb-btn-primary" onClick={() => setStage("outcome")}>End call &amp; log outcome</button>
+        <a href={`tel:${client?.phone ?? ""}`} className="wb-btn-primary" onClick={() => setStage("outcome")}>
+          Call now
+        </a>
+        <button className="wb-btn-ghost !text-[12px]" onClick={() => setStage("outcome")}>
+          Already called, just log the outcome
+        </button>
       </div>
     );
   }

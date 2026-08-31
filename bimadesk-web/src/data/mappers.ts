@@ -6,6 +6,7 @@ import {
   Client, Lead, Policy, Quotation, Task, Communication, Note, StoredDocument,
   Activity, InsuranceType, CustomFieldDef, CommunicationTemplate, AutomationRule,
   AppNotification, Organization, Profile, SubscriptionPlan, Subscription, Payment,
+  TeamInvite, SavedPaymentMethod,
 } from "@/types";
 
 export function mapClient(r: any): Client {
@@ -128,6 +129,9 @@ export function mapCommunication(r: any): Communication {
     callOutcome: r.call_outcome ?? undefined,
     templateId: r.template_id ?? undefined,
     simulated: r.simulated,
+    deliveryStatus: r.delivery_status ?? "simulated",
+    providerMessageId: r.provider_message_id ?? undefined,
+    errorMessage: r.error_message ?? undefined,
     occurredAt: r.occurred_at,
   };
 }
@@ -152,6 +156,7 @@ export function mapDocument(r: any): StoredDocument {
     fileName: r.file_name,
     category: r.category ?? undefined,
     sizeBytes: r.size_bytes ?? undefined,
+    storagePath: r.storage_path ?? undefined,
     uploadedAt: r.uploaded_at,
   };
 }
@@ -261,6 +266,19 @@ export function mapSubscription(r: any): Subscription {
     planId: r.plan_id,
     status: r.status,
     currentPeriodEnd: r.current_period_end ?? undefined,
+    autoRenew: r.auto_renew ?? true,
+  };
+}
+
+export function mapSavedPaymentMethod(r: any): SavedPaymentMethod {
+  return {
+    id: r.id,
+    organizationId: r.organization_id,
+    cardLast4: r.card_last4 ?? undefined,
+    cardType: r.card_type ?? undefined,
+    expMonth: r.exp_month ?? undefined,
+    expYear: r.exp_year ?? undefined,
+    reusable: r.reusable,
   };
 }
 
@@ -274,5 +292,17 @@ export function mapPayment(r: any): Payment {
     status: r.status,
     mpesaReceiptNumber: r.mpesa_receipt_number ?? undefined,
     createdAt: r.created_at,
+  };
+}
+
+export function mapTeamInvite(r: any): TeamInvite {
+  return {
+    id: r.id,
+    organizationId: r.organization_id,
+    code: r.code,
+    role: r.role,
+    acceptedAt: r.accepted_at ?? undefined,
+    createdAt: r.created_at,
+    expiresAt: r.expires_at,
   };
 }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "@/data/appStore";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { ClientType, PreferredContactMethod } from "@/types";
+import { ClientType, PreferredContactMethod, clientDisplayName } from "@/types";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 export function ClientForm({ onDone }: { onDone: (clientId: string) => void }) {
@@ -16,7 +16,7 @@ export function ClientForm({ onDone }: { onDone: (clientId: string) => void }) {
   const [preferred, setPreferred] = useState<PreferredContactMethod>("call");
   const [error, setError] = useState<string | null>(null);
 
-  const possibleDuplicate = phone.length >= 6 && store.clients.some((c) => c.phone === phone);
+  const existingMatch = phone.length >= 6 ? store.clients.find((c) => c.phone === phone) : undefined;
 
   if (clientLimitReached(store.clients.length)) {
     return (
@@ -95,8 +95,13 @@ export function ClientForm({ onDone }: { onDone: (clientId: string) => void }) {
       <div>
         <label className="wb-label">Phone</label>
         <input className="wb-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+254 7…" />
-        {possibleDuplicate && (
-          <p className="text-[12px] text-amber-600 mt-1">We found a possible existing client with this phone number.</p>
+        {existingMatch && (
+          <p className="text-[12px] text-amber-600 mt-1">
+            We found an existing client with this phone number, {clientDisplayName(existingMatch)}.{" "}
+            <button type="button" className="underline" onClick={() => onDone(existingMatch.id)}>
+              View existing
+            </button>
+          </p>
         )}
       </div>
 

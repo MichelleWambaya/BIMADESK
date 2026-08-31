@@ -18,6 +18,8 @@ interface AuthContextValue {
   updateProfile: (patch: Partial<Pick<Profile, "fullName" | "phone" | "avatarColor" | "onboardingCompleted">>) => Promise<void>;
   updateOrganization: (patch: Partial<Pick<Organization, "name" | "billingEmail" | "mpesaPhone" | "themeColor" | "renewalReminderOffsets">>) => Promise<void>;
   completeSignupSetup: (input: { businessName: string; fullName: string; phone: string }) => Promise<{ error: string | null }>;
+  acceptTeamInvite: (code: string) => Promise<{ error: string | null }>;
+  deleteAccount: () => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -85,6 +87,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   }
 
+  /** Joins the organization behind an invite code instead of creating a
+   * new one. Used when the person arrived via a teammate's invite link. */
+  async function acceptTeamInvite(code: string) {
+    if (!session) return { error: "You need to be signed in first." };
+    const { error } = await supabase.rpc("accept_team_invite", { invite_code: code });
+    if (error) return { error: error.message };
+    await loadProfile(session.user.id);
+    return { error: null };
+  }
+
+  /** Permanently deletes the caller's account (see the delete-account
+   * Edge Function for what that means for owners vs teammates), then
+   * clears the local session since the account behind it no longer
+   * exists. */
+  async function deleteAccount() {
+    const { data, error } = await supabase.functions.invoke("delete-account");
+    if (error) return { error: error.message };
+    if (data?.error) return { error: data.error as string };
+    await supabase.auth.signOut();
+    return { error: null };
+  }
+
   async function signIn(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? error.message : null };
@@ -135,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, profile, organization, loading, signUp, signIn, signOut, sendPasswordReset, updatePassword, refreshProfile, updateProfile, updateOrganization, completeSignupSetup }}
+      value={{ session, profile, organization, loading, signUp, signIn, signOut, sendPasswordReset, updatePassword, refreshProfile, updateProfile, updateOrganization, completeSignupSetup, acceptTeamInvite, deleteAccount }}
     >
       {children}
     </AuthContext.Provider>

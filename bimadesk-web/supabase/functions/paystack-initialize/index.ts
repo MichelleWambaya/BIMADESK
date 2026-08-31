@@ -7,8 +7,16 @@
 //
 // Required secret:
 //   PAYSTACK_SECRET_KEY   (from your Paystack dashboard, test or live)
+//
+// Authorization note: this function requires the caller to be a signed-in
+// member of the organizationId in the request body (see _shared/auth.ts).
+// Without that check, any logged-in BimaDesk user could start a card
+// charge against a plan on behalf of an organization they don't belong
+// to (they'd still have to pay for it themselves, but there's no reason
+// to allow it at all).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { requireOrgMember } from "../_shared/auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -17,10 +25,21 @@ Deno.serve(async (req) => {
   try {
     const { organizationId, planId, email, amountKes } = await req.json();
     if (!organizationId || !planId || !email || !amountKes) {
-      return new Response(JSON.stringify({ error: "Missing organizationId, planId, email, or amountKes" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Missing organizationId, planId, email, or amountKes" }), { status: 200 });
     }
 
-    const secretKey = Deno.env.get("PAYSTACK_SECRET_KEY")!;
+    const { error: authError } = await requireOrgMember(req, organizationId);
+    if (authError) {
+      return new Response(JSON.stringify({ error: authError }), { status: 200 });
+    }
+
+    const secretKey = Deno.env.get("PAYSTACK_SECRET_KEY");
+    if (!secretKey) {
+      return new Response(
+        JSON.stringify({ error: "Card payments aren't configured yet. Add PAYSTACK_SECRET_KEY as an Edge Function secret once you have a Paystack account." }),
+        { status: 200 }
+      );
+    }
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
     const { data: payment, error } = await supabase
@@ -44,7 +63,7 @@ Deno.serve(async (req) => {
     const initData = await initRes.json();
 
     if (!initRes.ok || !initData.status) {
-      return new Response(JSON.stringify({ error: initData.message ?? "Paystack could not start the transaction" }), { status: 502 });
+      return new Response(JSON.stringify({ error: initData.message ?? "Paystack could not start the transaction" }), { status: 200 });
     }
 
     await supabase.from("payments").update({ paystack_reference: initData.data.reference }).eq("id", payment.id);
@@ -53,6 +72,6 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unexpected error" }), { status: 500 });
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unexpected error" }), { status: 200 });
   }
 });

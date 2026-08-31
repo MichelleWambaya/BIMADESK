@@ -1,20 +1,26 @@
 import React, { useState } from "react";
 import { useApp } from "@/data/appStore";
-import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 import { InsuranceTypeBadge } from "@/components/shared/StatusBadge";
-import { Mail, MessageSquare, Calendar, Cloud, Link2, Download, Upload, CreditCard } from "lucide-react";
+import { Download, Upload, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Modal } from "@/components/shared/Modal";
 import { CustomFieldsEditor } from "./CustomFieldsEditor";
 import { NewInsuranceTypeForm } from "./NewInsuranceTypeForm";
 import { ReminderOffsetsEditor } from "./ReminderOffsetsEditor";
+import { AccountSection } from "./AccountSection";
+import { TeamSection } from "./TeamSection";
+import { AppearanceSection } from "./AppearanceSection";
+import { DuplicateFinder } from "./DuplicateFinder";
+import { IntegrationsSection } from "./IntegrationsSection";
 
-type Section = "profile" | "products" | "automations" | "templates" | "reminders" | "integrations" | "data";
+type Section = "account" | "team" | "appearance" | "products" | "automations" | "templates" | "reminders" | "integrations" | "data";
 
 const SECTIONS: { key: Section; label: string }[] = [
-  { key: "profile", label: "Profile" },
+  { key: "account", label: "Account" },
+  { key: "team", label: "Team" },
+  { key: "appearance", label: "Appearance" },
   { key: "products", label: "Insurance products" },
   { key: "automations", label: "Automations" },
   { key: "templates", label: "Templates" },
@@ -25,26 +31,10 @@ const SECTIONS: { key: Section; label: string }[] = [
 
 export function SettingsPage() {
   const store = useApp();
-  const { profile, organization, updateProfile, updateOrganization } = useAuth();
   const { canUseAutomation } = useSubscription();
-  const [section, setSection] = useState<Section>("profile");
+  const [section, setSection] = useState<Section>("account");
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
   const [addingType, setAddingType] = useState(false);
-
-  const [fullName, setFullName] = useState(profile?.fullName ?? "");
-  const [phone, setPhone] = useState(profile?.phone ?? "");
-  const [businessName, setBusinessName] = useState(organization?.name ?? "");
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [savedNotice, setSavedNotice] = useState(false);
-
-  async function saveProfile(e: React.FormEvent) {
-    e.preventDefault();
-    setSavingProfile(true);
-    await Promise.all([updateProfile({ fullName, phone }), updateOrganization({ name: businessName })]);
-    setSavingProfile(false);
-    setSavedNotice(true);
-    setTimeout(() => setSavedNotice(false), 2500);
-  }
 
   function exportCSV() {
     const headers = ["Client", "Phone", "Email", "City"];
@@ -63,45 +53,31 @@ export function SettingsPage() {
     <div className="flex flex-col md:flex-row gap-5">
       <div className="md:w-52 shrink-0">
         <h1 className="text-[18px] font-semibold mb-3">Settings</h1>
-        <nav className="space-y-0.5">
+        <nav className="flex md:flex-col gap-0.5 overflow-x-auto md:overflow-visible -mx-1 px-1 md:mx-0 md:px-0">
           {SECTIONS.map((s) => (
             <button
               key={s.key}
               onClick={() => setSection(s.key)}
-              className={`w-full text-left px-2.5 py-1.5 rounded-[8px] text-[13px] ${
+              className={`shrink-0 text-left px-2.5 py-1.5 rounded-[8px] text-[13px] whitespace-nowrap ${
                 section === s.key ? "bg-violet-50 text-violet-700 font-medium" : "text-ink-soft hover:bg-paper-sunk"
               }`}
             >
               {s.label}
             </button>
           ))}
-          <Link to="/app/billing" className="w-full flex items-center gap-1.5 text-left px-2.5 py-1.5 rounded-[8px] text-[13px] text-ink-soft hover:bg-paper-sunk">
+          <Link
+            to="/app/billing"
+            className="shrink-0 flex items-center gap-1.5 text-left px-2.5 py-1.5 rounded-[8px] text-[13px] text-ink-soft hover:bg-paper-sunk whitespace-nowrap"
+          >
             <CreditCard size={13} /> Billing and plan
           </Link>
         </nav>
       </div>
 
       <div className="flex-1 space-y-4">
-        {section === "profile" && (
-          <form onSubmit={saveProfile} className="wb-card p-4 max-w-md space-y-3">
-            <div>
-              <label className="wb-label">Your name</label>
-              <input className="wb-input" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-            </div>
-            <div>
-              <label className="wb-label">Business name</label>
-              <input className="wb-input" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
-            </div>
-            <div>
-              <label className="wb-label">Phone</label>
-              <input className="wb-input" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            <button type="submit" className="wb-btn-primary" disabled={savingProfile}>
-              {savingProfile ? "Saving" : "Save changes"}
-            </button>
-            {savedNotice && <p className="text-[12px] text-emerald-600">Saved.</p>}
-          </form>
-        )}
+        {section === "account" && <AccountSection />}
+        {section === "team" && <TeamSection />}
+        {section === "appearance" && <AppearanceSection />}
 
         {section === "products" && (
           <div className="space-y-3">
@@ -164,43 +140,29 @@ export function SettingsPage() {
 
         {section === "reminders" && <ReminderOffsetsEditor />}
 
-        {section === "integrations" && (
-          <div className="wb-card divide-y divide-line">
-            {[
-              { icon: Mail, label: "Email", desc: "Send real email from your own mailbox" },
-              { icon: MessageSquare, label: "WhatsApp Business API", desc: "Send real WhatsApp messages" },
-              { icon: MessageSquare, label: "SMS gateway", desc: "Send real SMS" },
-              { icon: Calendar, label: "Device calendar", desc: "Two-way sync with your phone's calendar" },
-              { icon: Cloud, label: "Cloud storage", desc: "Store documents in Drive, Dropbox, or OneDrive" },
-              { icon: Link2, label: "Insurer APIs", desc: "Pull quotes and policy data directly from insurers" },
-            ].map((i) => (
-              <div key={i.label} className="flex items-center gap-3 px-4 py-3">
-                <i.icon size={16} className="text-ink-faint shrink-0" />
-                <div className="flex-1">
-                  <p className="text-[13.5px] font-medium">{i.label}</p>
-                  <p className="text-[11.5px] text-ink-faint">{i.desc}</p>
-                </div>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-paper-sunk text-ink-faint">Not connected</span>
-              </div>
-            ))}
-          </div>
-        )}
+        {section === "integrations" && <IntegrationsSection />}
 
         {section === "data" && (
-          <div className="space-y-3 max-w-md">
-            <div className="wb-card p-4 flex items-center justify-between">
-              <div>
-                <p className="text-[13.5px] font-medium">Import from CSV</p>
-                <p className="text-[11.5px] text-ink-faint">Bring your existing client list in.</p>
+          <div className="space-y-5 max-w-md">
+            <div className="space-y-3">
+              <div className="wb-card p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[13.5px] font-medium">Import from CSV</p>
+                  <p className="text-[11.5px] text-ink-faint">Bring your existing client list in.</p>
+                </div>
+                <Link to="/app/import" className="wb-btn-secondary"><Upload size={14} /> Import</Link>
               </div>
-              <Link to="/app/import" className="wb-btn-secondary"><Upload size={14} /> Import</Link>
+              <div className="wb-card p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[13.5px] font-medium">Export clients</p>
+                  <p className="text-[11.5px] text-ink-faint">Download your client list as CSV.</p>
+                </div>
+                <button className="wb-btn-secondary" onClick={exportCSV}><Download size={14} /> Export</button>
+              </div>
             </div>
-            <div className="wb-card p-4 flex items-center justify-between">
-              <div>
-                <p className="text-[13.5px] font-medium">Export clients</p>
-                <p className="text-[11.5px] text-ink-faint">Download your client list as CSV.</p>
-              </div>
-              <button className="wb-btn-secondary" onClick={exportCSV}><Download size={14} /> Export</button>
+            <div>
+              <p className="text-[12px] font-semibold text-ink-soft uppercase tracking-wide mb-2">Possible duplicates</p>
+              <DuplicateFinder />
             </div>
           </div>
         )}

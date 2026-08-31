@@ -87,6 +87,7 @@ interface AppAPI extends AppState {
   addClient: (input: NewClientInput) => Promise<Client | null>;
   addPolicy: (input: NewPolicyInput) => Promise<Policy | null>;
   updatePolicyStatus: (id: ID, status: PolicyStatus) => Promise<void>;
+  updatePolicyEndDate: (id: ID, endDate: string) => Promise<void>;
   addLead: (input: NewLeadInput) => Promise<Lead | null>;
   updateLeadStage: (id: ID, stage: LeadStage) => Promise<void>;
   addQuotation: (input: NewQuotationInput) => Promise<Quotation | null>;
@@ -95,17 +96,19 @@ interface AppAPI extends AppState {
   completeTask: (id: ID) => Promise<void>;
   cancelTask: (id: ID) => Promise<void>;
   logCall: (clientId: ID, outcome: CallOutcome, notes: string, scheduleFollowUpDate?: string) => Promise<void>;
-  logMessage: (clientId: ID, channel: "whatsapp" | "sms", templateId: string, renderedBody: string) => Promise<void>;
-  logEmail: (clientId: ID, templateId: string | undefined, subject: string, renderedBody: string) => Promise<void>;
+  logMessage: (clientId: ID, channel: "whatsapp" | "sms", templateId: string, renderedBody: string) => Promise<{ error: string | null }>;
+  logEmail: (clientId: ID, templateId: string | undefined, subject: string, renderedBody: string) => Promise<{ error: string | null }>;
   addNote: (ownerType: DocumentOwnerType, ownerId: ID, body: string) => Promise<void>;
-  addDocument: (ownerType: DocumentOwnerType, ownerId: ID, fileName: string, category?: string, sizeBytes?: number) => Promise<void>;
+  uploadDocument: (ownerType: DocumentOwnerType, ownerId: ID, file: File, category?: string) => Promise<{ error: string | null }>;
   deleteDocument: (id: ID) => Promise<void>;
+  getDocumentUrl: (doc: StoredDocument, forceDownload?: boolean) => Promise<{ url: string | null; error: string | null }>;
   toggleAutomation: (id: ID) => Promise<void>;
   markNotificationRead: (id: ID) => Promise<void>;
   addInsuranceType: (label: string, color: string) => Promise<InsuranceType | null>;
   addCustomField: (insuranceTypeId: ID, field: Omit<CustomFieldDef, "id">) => Promise<void>;
   removeCustomField: (insuranceTypeId: ID, fieldId: ID) => Promise<void>;
   importClients: (rows: NewClientInput[]) => Promise<{ imported: number; duplicates: number }>;
+  mergeClients: (primaryId: ID, duplicateId: ID) => Promise<{ error: string | null }>;
   clientById: (id?: ID) => Client | undefined;
   policiesForClient: (clientId: ID) => Policy[];
   quotationsForClient: (clientId: ID) => Quotation[];
@@ -262,6 +265,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         await insertActivity(policy.clientId, "policy_status_changed", `Policy ${policy.policyNumber} marked ${status}`, id);
       },
 
+      async updatePolicyEndDate(id, endDate) {
+        const { data } = await supabase.from("policies").update({ end_date: endDate }).eq("id", id).select().single();
+        if (!data) return;
+        const policy = mapPolicy(data);
+        setState((s) => ({ ...s, policies: s.policies.map((p) => (p.id === id ? policy : p)) }));
+        await insertActivity(policy.clientId, "policy_status_changed", `Expiration date for policy ${policy.policyNumber} set to ${endDate}`, id);
+      },
+
       async addLead(input) {
         if (!organizationId) return null;
         const { data, error } = await supabase
@@ -367,6 +378,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         if (data) setState((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? mapTask(data) : t)) }));
       },
 
+      // Dialing itself is real now (CallModal opens a tel: link to the
+      // device's own dialer), but there is no telephony provider in the
+      // loop to confirm a call happened or how it went -- that's true of
+      // click-to-call in general, not something an API integration would
+      // fix without a much bigger VoIP project. So the outcome logged
+      // here is still the person's own self-reported note, which is why
+      // this keeps `simulated: true` (meaning "not verified by a
+      // provider"), unlike the SMS/WhatsApp/email sends below.
       async logCall(clientId, outcome, notes, scheduleFollowUpDate) {
         if (!organizationId) return;
         const { data } = await supabase
@@ -382,25 +401,32 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       },
 
       async logMessage(clientId, channel, templateId, renderedBody) {
-        if (!organizationId) return;
-        const { data } = await supabase
-          .from("communications")
-          .insert({ organization_id: organizationId, client_id: clientId, channel, direction: "outbound", template_id: templateId || null, body: renderedBody, simulated: true })
-          .select()
-          .single();
-        if (data) setState((s) => ({ ...s, communications: [mapCommunication(data), ...s.communications] }));
-        await insertActivity(clientId, "communication_logged", `${channel === "whatsapp" ? "WhatsApp" : "SMS"} message sent, simulated`);
+        if (!organizationId) return { error: "No organization" };
+        const functionName = channel === "whatsapp" ? "send-whatsapp" : "send-sms";
+        const client = state.clients.find((c) => c.id === clientId);
+        const { data, error } = await supabase.functions.invoke(functionName, {
+          body: { organizationId, clientId, to: client?.phone, body: renderedBody, templateId },
+        });
+        if (error) return { error: error.message };
+        if (data?.error) return { error: data.error as string };
+        if (data?.communication) {
+          setState((s) => ({ ...s, communications: [mapCommunication(data.communication), ...s.communications] }));
+        }
+        return { error: null };
       },
 
       async logEmail(clientId, templateId, subject, renderedBody) {
-        if (!organizationId) return;
-        const { data } = await supabase
-          .from("communications")
-          .insert({ organization_id: organizationId, client_id: clientId, channel: "email", direction: "outbound", template_id: templateId || null, subject, body: renderedBody, simulated: true })
-          .select()
-          .single();
-        if (data) setState((s) => ({ ...s, communications: [mapCommunication(data), ...s.communications] }));
-        await insertActivity(clientId, "communication_logged", `Email sent, simulated: ${subject}`);
+        if (!organizationId) return { error: "No organization" };
+        const client = state.clients.find((c) => c.id === clientId);
+        const { data, error } = await supabase.functions.invoke("send-email", {
+          body: { organizationId, clientId, to: client?.email, subject, body: renderedBody, templateId },
+        });
+        if (error) return { error: error.message };
+        if (data?.error) return { error: data.error as string };
+        if (data?.communication) {
+          setState((s) => ({ ...s, communications: [mapCommunication(data.communication), ...s.communications] }));
+        }
+        return { error: null };
       },
 
       async addNote(ownerType, ownerId, body) {
@@ -414,20 +440,63 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         if (ownerType === "client") await insertActivity(ownerId, "note_added", "Note added");
       },
 
-      async addDocument(ownerType, ownerId, fileName, category, sizeBytes) {
-        if (!organizationId) return;
-        const { data } = await supabase
+      async uploadDocument(ownerType, ownerId, file, category) {
+        if (!organizationId) return { error: "No organization" };
+        const MAX_BYTES = 10 * 1024 * 1024;
+        if (file.size > MAX_BYTES) return { error: "Files over 10MB aren't supported yet. Try compressing it first." };
+
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const storagePath = `${organizationId}/${ownerType}/${ownerId}/${Date.now()}-${safeName}`;
+
+        const { error: uploadError } = await supabase.storage.from("documents").upload(storagePath, file, {
+          contentType: file.type || undefined,
+          upsert: false,
+        });
+        if (uploadError) return { error: uploadError.message };
+
+        const { data, error: insertError } = await supabase
           .from("documents")
-          .insert({ organization_id: organizationId, owner_type: ownerType, owner_id: ownerId, file_name: fileName, category, size_bytes: sizeBytes })
+          .insert({
+            organization_id: organizationId,
+            owner_type: ownerType,
+            owner_id: ownerId,
+            file_name: file.name,
+            category,
+            size_bytes: file.size,
+            storage_path: storagePath,
+          })
           .select()
           .single();
-        if (data) setState((s) => ({ ...s, documents: [mapDocument(data), ...s.documents] }));
-        if (ownerType === "client") await insertActivity(ownerId, "document_added", `Document added: ${fileName}`);
+        if (insertError) {
+          // Roll back the upload rather than leaving an orphaned file with
+          // no database row pointing at it.
+          await supabase.storage.from("documents").remove([storagePath]);
+          return { error: insertError.message };
+        }
+
+        setState((s) => ({ ...s, documents: [mapDocument(data), ...s.documents] }));
+        if (ownerType === "client") await insertActivity(ownerId, "document_added", `Document added: ${file.name}`);
+        return { error: null };
       },
 
       async deleteDocument(id) {
+        const doc = state.documents.find((d) => d.id === id);
+        if (doc?.storagePath) {
+          await supabase.storage.from("documents").remove([doc.storagePath]);
+        }
         await supabase.from("documents").delete().eq("id", id);
         setState((s) => ({ ...s, documents: s.documents.filter((d) => d.id !== id) }));
+      },
+
+      async getDocumentUrl(doc, forceDownload) {
+        if (!doc.storagePath) {
+          return { url: null, error: "This document was uploaded before file storage was added and has no file to open. Delete and re-upload it." };
+        }
+        const { data, error } = await supabase.storage
+          .from("documents")
+          .createSignedUrl(doc.storagePath, 60, forceDownload ? { download: doc.fileName } : undefined);
+        if (error || !data) return { url: null, error: error?.message ?? "Could not generate a link to this file." };
+        return { url: data.signedUrl, error: null };
       },
 
       async toggleAutomation(id) {
@@ -494,6 +563,35 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           if (client) imported += 1;
         }
         return { imported, duplicates };
+      },
+
+      /** Folds a duplicate client record into the primary one: every
+       * policy, task, quotation, communication, note, document, activity,
+       * and lead that pointed at the duplicate is repointed at the
+       * primary, then the duplicate row is deleted. Refetches afterward
+       * rather than patching local state piece by piece, since that many
+       * tables are touched at once and correctness matters more than
+       * saving one round trip here. */
+      async mergeClients(primaryId, duplicateId) {
+        if (primaryId === duplicateId) return { error: "Choose two different clients to merge." };
+        try {
+          await Promise.all([
+            supabase.from("policies").update({ client_id: primaryId }).eq("client_id", duplicateId),
+            supabase.from("tasks").update({ client_id: primaryId }).eq("client_id", duplicateId),
+            supabase.from("quotations").update({ client_id: primaryId }).eq("client_id", duplicateId),
+            supabase.from("communications").update({ client_id: primaryId }).eq("client_id", duplicateId),
+            supabase.from("activities").update({ client_id: primaryId }).eq("client_id", duplicateId),
+            supabase.from("leads").update({ client_id: primaryId }).eq("client_id", duplicateId),
+            supabase.from("notes").update({ owner_id: primaryId }).eq("owner_type", "client").eq("owner_id", duplicateId),
+            supabase.from("documents").update({ owner_id: primaryId }).eq("owner_type", "client").eq("owner_id", duplicateId),
+          ]);
+          await supabase.from("clients").delete().eq("id", duplicateId);
+          await insertActivity(primaryId, "note_added", "Merged a duplicate client record into this one");
+          await loadAll();
+          return { error: null };
+        } catch (err) {
+          return { error: err instanceof Error ? err.message : "Could not merge these clients." };
+        }
       },
 
       clientById,

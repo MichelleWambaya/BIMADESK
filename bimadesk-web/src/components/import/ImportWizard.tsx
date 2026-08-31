@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Upload, ArrowRight, Check, AlertTriangle } from "lucide-react";
 import { useApp } from "@/data/appStore";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { parseCSV } from "@/lib/csv";
 
 type Step = "upload" | "map" | "preview" | "importing" | "done";
@@ -16,6 +17,7 @@ const LARGE_FILE_BYTES = 3 * 1024 * 1024;
 
 export function ImportWizard() {
   const store = useApp();
+  const { effectivePlan, isAdmin } = useSubscription();
   const [step, setStep] = useState<Step>("upload");
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileTooBig, setFileTooBig] = useState(false);
@@ -24,7 +26,12 @@ export function ImportWizard() {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState(0);
-  const [result, setResult] = useState<{ imported: number; duplicates: number } | null>(null);
+  const [result, setResult] = useState<{ imported: number; duplicates: number; overLimit: number } | null>(null);
+
+  const remainingSeats = useMemo(() => {
+    if (isAdmin || effectivePlan?.maxClients == null) return Infinity;
+    return Math.max(0, effectivePlan.maxClients - store.clients.length);
+  }, [isAdmin, effectivePlan, store.clients.length]);
 
   function handleFile(file: File) {
     if (!file.name.toLowerCase().endsWith(".csv")) {
@@ -64,7 +71,9 @@ export function ImportWizard() {
   async function confirmImport() {
     setStep("importing");
     setProgress(0);
-    const inputs = rows.map((r) => {
+    const capped = rows.slice(0, remainingSeats === Infinity ? rows.length : remainingSeats);
+    const overLimit = rows.length - capped.length;
+    const inputs = capped.map((r) => {
       const name = mapping.name ? r[mapping.name] : "";
       const [firstName, ...rest] = (name || "Imported client").split(" ");
       return {
@@ -78,7 +87,7 @@ export function ImportWizard() {
 
     const res = await store.importClients(inputs);
     setProgress(inputs.length);
-    setResult(res);
+    setResult({ ...res, overLimit });
     setStep("done");
   }
 
@@ -154,6 +163,12 @@ export function ImportWizard() {
               <AlertTriangle size={14} /> {duplicateCount} row{duplicateCount === 1 ? "" : "s"} look like existing clients and will be skipped.
             </div>
           )}
+          {remainingSeats !== Infinity && rows.length > remainingSeats && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-[8px] bg-coral-50 text-coral-600 text-[12.5px]">
+              <AlertTriangle size={14} /> Your plan allows {remainingSeats} more client{remainingSeats === 1 ? "" : "s"}. Only the first {remainingSeats}
+              will be imported; upgrade from Billing to bring in the rest.
+            </div>
+          )}
           <div className="wb-card overflow-x-auto">
             <table className="w-full text-[12.5px]">
               <thead>
@@ -175,7 +190,9 @@ export function ImportWizard() {
             </table>
           </div>
           {rows.length > 8 && <p className="text-[11.5px] text-ink-faint">Plus {rows.length - 8} more rows.</p>}
-          <button className="wb-btn-primary" onClick={confirmImport}>Confirm import</button>
+          <button className="wb-btn-primary" onClick={confirmImport} disabled={remainingSeats === 0}>
+            {remainingSeats === 0 ? "Plan limit reached" : "Confirm import"}
+          </button>
         </div>
       )}
 
@@ -193,6 +210,7 @@ export function ImportWizard() {
           </div>
           <p className="text-[14px] font-medium">Imported {result.imported} client{result.imported === 1 ? "" : "s"}</p>
           {result.duplicates > 0 && <p className="text-[12.5px] text-ink-faint">{result.duplicates} possible duplicate{result.duplicates === 1 ? "" : "s"} skipped.</p>}
+          {result.overLimit > 0 && <p className="text-[12.5px] text-coral-500">{result.overLimit} row{result.overLimit === 1 ? "" : "s"} skipped, over your plan's client limit.</p>}
           <button
             className="wb-btn-secondary"
             onClick={() => { setStep("upload"); setResult(null); setRows([]); setHeaders([]); setMapping({}); setTruncated(false); setFileTooBig(false); }}

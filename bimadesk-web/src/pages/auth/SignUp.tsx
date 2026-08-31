@@ -20,12 +20,19 @@ export function SignUpPage() {
     setError(null);
     const { error, hasSession } = await signUp({ email, password });
     setSubmitting(false);
-    if (error) return setError(error);
+    if (error) return setError(friendlySignUpError(error));
     if (hasSession) {
       navigate("/onboarding", { replace: true });
     } else {
       setCheckEmail(true);
     }
+  }
+
+  function friendlySignUpError(rawError: string): string {
+    if (/rate limit/i.test(rawError)) {
+      return "Too many accounts have been created from here in a short time, this is a limit Supabase puts on its shared email sending, not something wrong with your account. Wait a few minutes and try again, or use a different email.";
+    }
+    return rawError;
   }
 
   return (

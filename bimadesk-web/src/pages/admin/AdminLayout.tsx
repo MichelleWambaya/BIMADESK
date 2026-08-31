@@ -14,8 +14,8 @@ export function AdminLayout() {
     <div className="min-h-screen bg-ink flex">
       <aside className="w-56 shrink-0 border-r border-white/10 p-4 flex flex-col">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-7 h-7 rounded-tab bg-amber-500 flex items-center justify-center text-white font-display text-[13px]">A</div>
-          <span className="text-white font-display text-[14px]">Admin panel</span>
+          <div className="w-7 h-7 rounded-tab bg-amber-500 flex items-center justify-center text-black font-display text-[13px]">A</div>
+          <span className="text-black font-display text-[14px]">Admin panel</span>
         </div>
         <nav className="flex-1 space-y-0.5">
           {NAV.map((item) => (
@@ -25,7 +25,7 @@ export function AdminLayout() {
               end={item.end}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] text-[13px] ${
-                  isActive ? "bg-white/15 text-white font-medium" : "text-white/60 hover:bg-white/10 hover:text-white"
+                  isActive ? "bg-white/15 text-black font-medium" : "text-black/75 hover:bg-white/10 hover:text-black"
                 }`
               }
             >
@@ -33,7 +33,7 @@ export function AdminLayout() {
             </NavLink>
           ))}
         </nav>
-        <Link to="/app" className="flex items-center gap-2 text-[12.5px] text-white/60 hover:text-white">
+        <Link to="/app" className="flex items-center gap-2 text-[12.5px] text-black/60 hover:text-black">
           <ArrowLeft size={13} /> Back to app
         </Link>
       </aside>

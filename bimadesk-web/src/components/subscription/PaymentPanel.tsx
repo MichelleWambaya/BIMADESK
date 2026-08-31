@@ -109,6 +109,9 @@ export function PaymentPanel({
         <div>
           <label className="wb-label">Email for your receipt</label>
           <input className="wb-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+          <p className="text-[11px] text-ink-faint mt-1">
+            If your card supports it, it's saved for automatic renewal next month. Turn this off any time from Billing.
+          </p>
         </div>
       )}
 
