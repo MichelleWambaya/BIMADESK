@@ -11,7 +11,7 @@ const NAV = [
 
 export function AdminLayout() {
   return (
-    <div className="min-h-screen bg-ink flex text-black">
+    <div className="min-h-screen bg-ink flex">
       <aside className="w-56 shrink-0 border-r border-white/10 p-4 flex flex-col">
         <div className="flex items-center gap-2 mb-6">
           <div className="w-7 h-7 rounded-tab bg-amber-500 flex items-center justify-center text-black font-display text-[13px]">A</div>
@@ -25,11 +25,7 @@ export function AdminLayout() {
               end={item.end}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] text-[13px] ${
-<<<<<<< HEAD
                   isActive ? "bg-white/15 text-black font-medium" : "text-black/75 hover:bg-white/10 hover:text-black"
-=======
-                  isActive ? "bg-white/15 text-white font-medium" : "text-white/75 hover:bg-white/10 hover:text-white"
->>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
                 }`
               }
             >
