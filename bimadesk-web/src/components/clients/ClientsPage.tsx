@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Phone, Mail } from "lucide-react";
 import { useApp } from "@/data/appStore";
 import { clientDisplayName } from "@/types";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useQuickActions } from "@/components/layout/QuickActions";
+import { Avatar } from "@/components/shared/Avatar";
 import { formatDate } from "@/lib/date";
 
 export function ClientsPage() {
@@ -64,24 +65,47 @@ export function ClientsPage() {
       {filtered.length === 0 ? (
         <EmptyState icon={Users} title="No clients match" description="Try a different search or clear your filters." />
       ) : (
-        <div className="wb-card divide-y divide-line">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((c) => {
             const policyCount = store.policiesForClient(c.id).length;
+            const name = clientDisplayName(c);
             return (
               <button
                 key={c.id}
                 onClick={() => navigate(`/app/clients/${c.id}`)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-paper-sunk text-left"
+                className="wb-glass-card p-4 flex flex-col gap-3 text-left hover:-translate-y-0.5 hover:shadow-raised transition-all"
               >
-                <div className="w-8 h-8 rounded-full bg-violet-50 text-violet-600 flex items-center justify-center font-display text-[13px] shrink-0">
-                  {clientDisplayName(c).slice(0, 1).toUpperCase()}
+                <div className="flex items-start gap-3">
+                  <Avatar name={name} seed={c.id} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-semibold truncate">{name}</p>
+                    <p className="text-[11px] text-ink-faint truncate">Client since {formatDate(c.createdAt)}</p>
+                  </div>
+                  <span className="text-[10.5px] shrink-0 px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-medium">
+                    {policyCount} polic{policyCount === 1 ? "y" : "ies"}
+                  </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13.5px] font-medium truncate">{clientDisplayName(c)}</p>
-                  <p className="text-[11.5px] text-ink-faint truncate">{c.phone} {c.email ? `· ${c.email}` : ""}</p>
+
+                <div className="space-y-1 pl-0.5">
+                  <div className="flex items-center gap-1.5 text-[12px] text-ink-soft truncate">
+                    <Phone size={12} className="text-ink-faint shrink-0" /> {c.phone}
+                  </div>
+                  {c.email && (
+                    <div className="flex items-center gap-1.5 text-[12px] text-ink-soft truncate">
+                      <Mail size={12} className="text-ink-faint shrink-0" /> {c.email}
+                    </div>
+                  )}
                 </div>
-                <span className="text-[11.5px] text-ink-faint hidden sm:block">{policyCount} polic{policyCount === 1 ? "y" : "ies"}</span>
-                <span className="text-[11.5px] text-ink-faint w-24 text-right hidden sm:block">{formatDate(c.createdAt)}</span>
+
+                {c.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1 border-t border-line/60">
+                    {c.tags.slice(0, 3).map((t) => (
+                      <span key={t} className="text-[10px] px-1.5 py-0.5 rounded-full bg-paper-sunk text-ink-faint">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </button>
             );
           })}
