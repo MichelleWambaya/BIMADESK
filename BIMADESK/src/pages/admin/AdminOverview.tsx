@@ -12,7 +12,11 @@ interface Stats {
 function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: string | number }) {
   return (
     <div className="wb-glass-dark p-4">
+<<<<<<< HEAD
       <div className="flex items-center gap-2 text-black/70 text-[12px] mb-2">
+=======
+      <div className="flex items-center gap-2 text-white/70 text-[12px] mb-2">
+>>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
         <Icon size={14} /> {label}
       </div>
       <p className="text-black font-display text-2xl">{value}</p>
@@ -48,8 +52,13 @@ export function AdminOverview() {
   return (
     <div className="space-y-5">
       <div>
+<<<<<<< HEAD
         <h1 className="text-black font-display text-xl">Platform overview</h1>
         <p className="text-black/70 text-[13px]">Across every BimaDesk organization.</p>
+=======
+        <h1 className="text-white font-display text-xl">Platform overview</h1>
+        <p className="text-white/70 text-[13px]">Across every BimaDesk organization.</p>
+>>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
       </div>
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -59,7 +68,11 @@ export function AdminOverview() {
           <StatCard icon={TrendingUp} label="Revenue this month" value={`KES ${stats.revenueThisMonthKes.toLocaleString()}`} />
         </div>
       )}
+<<<<<<< HEAD
       <p className="text-black/60 text-[12px]">
+=======
+      <p className="text-white/60 text-[12px]">
+>>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
         As a platform admin, you always have every plan feature unlocked in your own workspace. Use Billing, then Admin preview to see the app as any plan would.
       </p>
     </div>

@@ -25,7 +25,11 @@ export function AdminLayout() {
               end={item.end}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] text-[13px] ${
+<<<<<<< HEAD
                   isActive ? "bg-white/15 text-black font-medium" : "text-black/75 hover:bg-white/10 hover:text-black"
+=======
+                  isActive ? "bg-white/15 text-white font-medium" : "text-white/75 hover:bg-white/10 hover:text-white"
+>>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
                 }`
               }
             >

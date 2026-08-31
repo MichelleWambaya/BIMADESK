@@ -70,14 +70,23 @@ export function AdminOrganizations() {
   return (
     <div className="space-y-5">
       <div>
+<<<<<<< HEAD
         <h1 className="text-black font-display text-xl">Organizations</h1>
         <p className="text-black/70 text-[13px]">Every business using BimaDesk, and their current plan.</p>
+=======
+        <h1 className="text-white font-display text-xl">Organizations</h1>
+        <p className="text-white/70 text-[13px]">Every business using BimaDesk, and their current plan.</p>
+>>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
       </div>
 
       <div className="wb-glass-dark overflow-hidden">
         <table className="w-full text-[13px]">
           <thead>
+<<<<<<< HEAD
             <tr className="border-b border-white/10 text-black/75 text-left text-[11.5px]">
+=======
+            <tr className="border-b border-white/10 text-white/75 text-left text-[11.5px]">
+>>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
               <th className="px-4 py-2.5 font-medium">Business</th>
               <th className="px-4 py-2.5 font-medium">Clients</th>
               <th className="px-4 py-2.5 font-medium">Plan</th>
@@ -88,9 +97,15 @@ export function AdminOrganizations() {
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-b border-white/5 last:border-0">
+<<<<<<< HEAD
                 <td className="px-4 py-2.5 text-black">{r.name}</td>
                 <td className="px-4 py-2.5 text-black/85">{r.clientCount}</td>
                 <td className="px-4 py-2.5 text-black/85">{r.planName}</td>
+=======
+                <td className="px-4 py-2.5 text-white">{r.name}</td>
+                <td className="px-4 py-2.5 text-white/85">{r.clientCount}</td>
+                <td className="px-4 py-2.5 text-white/85">{r.planName}</td>
+>>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
                 <td className="px-4 py-2.5">
                   <span className={`text-[11px] px-2 py-0.5 rounded-full ${r.status === "active" ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-black/50"}`}>
                     {r.status}
@@ -111,7 +126,11 @@ export function AdminOrganizations() {
             ))}
           </tbody>
         </table>
+<<<<<<< HEAD
         {!loading && rows.length === 0 && <p className="text-black/60 text-[13px] p-6 text-center">No organizations yet.</p>}
+=======
+        {!loading && rows.length === 0 && <p className="text-white/60 text-[13px] p-6 text-center">No organizations yet.</p>}
+>>>>>>> 823ffb2699b0bbcd6b683b81a17105cfbae3e491
       </div>
     </div>
   );
