@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bd" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="55%" stop-color="#6D3CE5"/>
+      <stop offset="100%" stop-color="#472399"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="15" fill="url(#bd)"/>
+
+  <!-- Shield: insurance as protection. Drawn rather than an icon-font
+       glyph so it stays crisp at 16px favicon size. -->
+  <path d="M32 13 L47 18.5 V33.5 C47 42 40.5 48.5 32 51.5 C23.5 48.5 17 42 17 33.5 V18.5 Z"
+        fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linejoin="round"/>
+
+  <!-- Renewal arc: the same burn-down motif as the RenewalGauge used
+       throughout the app, so the mark and the product share a language.
+       Open at the top right to read as "in progress", not "complete". -->
+  <path d="M32 24.5 A8.5 8.5 0 1 1 25.6 38"
+        fill="none" stroke="#FFB84D" stroke-width="3.2" stroke-linecap="round"/>
+
+  <circle cx="32" cy="34" r="2.6" fill="#FFFFFF"/>
+</svg>

@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Theme tokens as CSS variables. tailwind.config.js points bg-paper,
+   text-ink, and border-line at these variables (via the rgb(var(...))
+   pattern), so every existing component that already uses those classes
+   gets dark mode for free, with no per-component changes needed.
+   See src/contexts/ThemeContext.tsx for how [data-theme] gets set.
+--------------------------------------------------------------------------- */
+
+:root {
+  --color-paper: 245 242 252;
+  --color-paper-raised: 255 255 255;
+  --color-paper-sunk: 236 230 249;
+  --color-ink: 23 19 31;
+  --color-ink-soft: 85 80 107;
+  --color-ink-faint: 141 135 168;
+  --color-line: 226 218 244;
+
+  /* Accessibility font scale, multiplied into html font-size below.
+     Set by src/contexts/AccessibilityContext.tsx. */
+  --a11y-scale: 1;
+}
+
+[data-theme="dark"] {
+  --color-paper: 13 10 22;
+  --color-paper-raised: 22 18 33;
+  --color-paper-sunk: 31 26 45;
+  --color-ink: 240 238 247;
+  --color-ink-soft: 191 187 209;
+  --color-ink-faint: 135 129 158;
+  --color-line: 54 49 71;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    /* `zoom` reflows layout (unlike transform: scale, which clips and does
+       not reflow), so this is the most broadly correct way to offer a
+       "larger text" accessibility option across a codebase that mostly
+       uses fixed px Tailwind sizes rather than rem. Supported in current
+       Chrome, Edge, and Safari; Firefox added support in version 126.
+       Older Firefox simply ignores it and stays at 100%, which is a safe
+       fallback rather than a broken one. */
+    zoom: var(--a11y-scale);
+  }
+  body {
+    @apply bg-paper text-ink font-body text-[14px];
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-ink;
+  }
+  :focus-visible {
+    outline: 2px solid theme("colors.violet.500");
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme("colors.line");
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  .wb-card {
+    @apply bg-paper-raised border border-line rounded-card shadow-card;
+  }
+  .wb-tab-card {
+    @apply bg-paper-raised border border-line rounded-tab shadow-card;
+  }
+  .wb-glass {
+    @apply bg-white/60 backdrop-blur-[10px] sm:backdrop-blur-glass border border-white/70 rounded-glass shadow-glass;
+  }
+  .wb-glass-dark {
+    @apply bg-white/10 backdrop-blur-[10px] sm:backdrop-blur-glass border border-white/20 rounded-glass shadow-glass;
+  }
+  .wb-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-violet-500 text-white text-[13px] font-medium
+      px-3.5 py-2 rounded-[10px] hover:bg-violet-600 transition-colors
+      disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98];
+  }
+  .wb-btn-accent {
+    @apply inline-flex items-center justify-center gap-2 bg-amber-500 text-white text-[13px] font-medium
+      px-3.5 py-2 rounded-[10px] hover:bg-amber-600 transition-colors
+      disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98];
+  }
+  .wb-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-transparent border border-line text-ink text-[13px]
+      font-medium px-3.5 py-2 rounded-[10px] hover:bg-paper-sunk transition-colors active:scale-[0.98];
+  }
+  .wb-btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 text-ink-soft text-[13px] font-medium
+      min-h-[36px] px-2.5 py-1.5 rounded-[8px] hover:bg-paper-sunk hover:text-ink transition-colors;
+  }
+  .wb-input {
+    @apply w-full bg-paper-raised border border-line rounded-[10px] px-3 py-2 text-[13px]
+      text-ink placeholder:text-ink-faint focus:border-violet-300 focus:ring-2 focus:ring-violet-100 transition-colors;
+  }
+  .wb-label {
+    @apply block text-[12px] font-medium text-ink-soft mb-1;
+  }
+  .wb-select {
+    @apply w-full bg-paper-raised border border-line rounded-[10px] px-3 py-2 text-[13px] text-ink;
+  }
+
+  /* GPU-friendly aurora background. Animating `background-position` on a
+     large gradient (the old approach) forces the browser to repaint the
+     whole layer every frame, which is the classic cause of laggy scrolling
+     on phones. Animating `transform` on an oversized absolutely
+     positioned layer instead is compositor-only work, which is why this
+     version does not feel janky on mid-range Android hardware. */
+  /* Deep near-black base with a violet cast, rather than a mid purple.
+     A darker floor makes a small amount of light read as luminous; the
+     previous mid-tone base meant the glows had to be strong to show at
+     all, which is what made it feel washed out. */
+  .wb-aurora-bg {
+    position: relative;
+    overflow: hidden;
+    background-color: #0B0716;
+    isolation: isolate;
+  }
+  /* One dominant light source plus a smaller warm accent. Two lights read
+     as intentional; three or more turn to grey where they overlap. */
+  .wb-aurora-bg::before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background:
+      radial-gradient(ellipse 60% 50% at 22% 18%, rgba(124, 77, 255, 0.42), transparent 62%),
+      radial-gradient(ellipse 45% 40% at 82% 30%, rgba(255, 138, 30, 0.16), transparent 60%);
+    animation: wb-aurora-drift 26s ease-in-out infinite;
+    will-change: transform;
+  }
+  /* Vignette, so text sits on the darkest part of the panel and stays
+     readable no matter where the drifting glow happens to be. */
+  .wb-aurora-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 90% 70% at 50% 45%, transparent 30%, rgba(11, 7, 22, 0.72) 100%);
+    pointer-events: none;
+  }
+  .wb-aurora-bg > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@keyframes wb-aurora-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(2%, 3%, 0) scale(1.08); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* User-controlled reduced motion (Settings, then Accessibility), separate
+   from the OS-level media query above so it works even when the OS
+   preference is not set. Applied via [data-reduce-motion="true"] on
+   <html> by AccessibilityContext. */
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
