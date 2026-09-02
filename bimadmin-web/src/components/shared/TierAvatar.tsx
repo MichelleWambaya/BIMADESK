@@ -75,7 +75,7 @@ export function TierAvatar({
           width: size,
           height: size,
           background: t.ring,
-          boxShadow: t.glow === "none" ? undefined : t.glow,
+          boxShadow: t.glow,
         }}
       >
         {avatarUrl ? (
