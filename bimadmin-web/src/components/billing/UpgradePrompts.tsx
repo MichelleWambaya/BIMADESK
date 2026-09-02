@@ -66,7 +66,7 @@ export function UpgradeCard() {
           <p className="text-[12.5px] text-ink-soft mt-1">
             {nearAnyLimit
               ? "Add unlimited policies and more clients before you hit the cap."
-              : `${nextPlan?.name ?? "Starter"} starts at KES ${(nextPlan?.priceKesMonthly ?? 499).toLocaleString()} a month and lifts the caps. Free for ${nextPlan?.trialDays ?? 14} days.`}
+              : `${nextPlan?.name ?? "Starter"} starts at USD ${(nextPlan?.priceKesMonthly ?? 10).toLocaleString()} a month and lifts the caps. Free for ${nextPlan?.trialDays ?? 14} days.`}
           </p>
         </div>
       </div>
