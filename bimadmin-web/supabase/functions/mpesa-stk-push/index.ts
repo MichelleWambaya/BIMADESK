@@ -37,7 +37,7 @@ import { darajaBaseUrl, getAccessToken, timestampNow, lipaNaMpesaPassword } from
 import { requireOrgMember } from "../_shared/auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   try {
@@ -61,7 +61,41 @@ Deno.serve(async (req) => {
 
     const accessToken = await getAccessToken(env, consumerKey, consumerSecret);
     const timestamp = timestampNow();
-    const password = lipaNaMpesaPassword(shortcode, passkey, timestamp);
+    // PAYBILL VS TILL.
+    //
+    // These are not interchangeable, and getting it wrong is rejected by
+    // Safaricom rather than silently mishandled:
+    //
+    //   Paybill   TransactionType CustomerPayBillOnline
+    //             BusinessShortCode = PartyB = the paybill number
+    //
+    //   Till      TransactionType CustomerBuyGoodsOnline
+    //             BusinessShortCode = the STORE number
+    //             PartyB            = the TILL (head office) number
+    //
+    // So a till needs two different numbers in two different fields,
+    // where a paybill uses one number twice. Set MPESA_SHORTCODE_TYPE to
+    // "till" and provide MPESA_STORE_NUMBER for a till setup.
+    const shortcodeType = (Deno.env.get("MPESA_SHORTCODE_TYPE") ?? "paybill").toLowerCase();
+    const isTill = shortcodeType === "till" || shortcodeType === "buygoods";
+    const storeNumber = Deno.env.get("MPESA_STORE_NUMBER") ?? shortcode;
+
+    if (isTill && !Deno.env.get("MPESA_STORE_NUMBER")) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "This deployment is configured for a till but MPESA_STORE_NUMBER is not set. A till needs both the store number and the till number.",
+        }),
+        { status: 200 }
+      );
+    }
+
+    // The password is a base64 of shortcode + passkey + timestamp, and
+    // the shortcode in it must match the BusinessShortCode sent below.
+    // For a till that is the store number, so this has to be resolved
+    // before the password is built, not after.
+    const businessShortCode = isTill ? storeNumber : shortcode;
+    const password = lipaNaMpesaPassword(businessShortCode, passkey, timestamp);
 
     // Kenyan phone numbers must be in 2547XXXXXXXX format for Daraja.
     const normalizedPhone = phone.replace(/^0/, "254").replace(/^\+/, "").replace(/\s/g, "");
@@ -75,10 +109,12 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        BusinessShortCode: shortcode,
+        // For a till, the password and BusinessShortCode are built from
+        // the STORE number, not the till number.
+        BusinessShortCode: businessShortCode,
         Password: password,
         Timestamp: timestamp,
-        TransactionType: "CustomerPayBillOnline",
+        TransactionType: isTill ? "CustomerBuyGoodsOnline" : "CustomerPayBillOnline",
         Amount: Math.round(amountKes),
         PartyA: normalizedPhone,
         PartyB: shortcode,

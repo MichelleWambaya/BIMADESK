@@ -29,8 +29,8 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <TodayActionsCard />
-        <RenewalsCard />
+        <div data-tour="dashboard-today"><TodayActionsCard /></div>
+        <div data-tour="dashboard-renewals"><RenewalsCard /></div>
         <PipelineCard />
       </div>
 

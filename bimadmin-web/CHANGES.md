@@ -1231,3 +1231,253 @@ placeholder" to visitors, which advertises an unfinished product. That
 section now hides entirely until real images are set. The mobile user
 guide had a chapter listing features the app does not have yet; removed,
 along with empty states that told users to go use the web app instead.
+
+---
+
+## 33. Policy members: beneficiaries and dependants
+
+`supabase/migrations/0013_policy_members.sql` plus
+`src/components/policies/PolicyMembersPanel.tsx`, shown from the Policies
+tab on a client.
+
+### The two shapes
+
+Retail, where the client is an individual:
+
+    Michael John (client)
+      Policy MED-001
+        Michael John      principal
+          Grace John      spouse
+          Brian John      child
+
+Corporate, where the client is a company:
+
+    Safaricom Sacco (client)
+      Policy MED-042
+        Employee A        principal
+          spouse, children
+        Employee B        principal
+          spouse, children
+
+### Corporate employees are deliberately not client records
+
+This is the decision that matters most and the one that is expensive to
+reverse. Making each employee a client is tempting, since they behave
+like members, but it breaks three things at once: a 400 employee scheme
+would eat 400 of the organization's client allowance under the plan caps
+added in 0012, the client list would fill with people the intermediary
+has no direct relationship with, and renewal reminders would chase
+employees instead of the Sacco that actually holds and pays for the
+policy.
+
+The client is who you sell to and invoice. The member is who is covered.
+For retail those happen to be the same person, so `policy_members.client_id`
+links them and existing retail policies get their principal backfilled by
+the migration.
+
+### Rules enforced in the database, not the interface
+
+- A dependant hangs off a principal, never off another dependant. Medical
+  schemes are two levels deep and the trigger caps it there.
+- A policy for an individual client gets exactly one principal; a policy
+  for a company gets many. The client type decides, so the interface
+  cannot get it wrong.
+- Removals are effective dated, never deletions. Someone who left mid
+  term was still covered for part of it, which matters for claims history
+  and pro rata premium.
+- Removing a principal cascades to their dependants, because a
+  dependant's cover exists only through their principal.
+
+`member_movements` logs every addition, removal, suspension and
+amendment with an effective date and optional premium delta. It is
+separate from the member row because the questions differ: the member row
+answers who is covered now, the log answers what changed and when.
+Insurers bill on movements and disputes are always about the second
+question.
+
+### Child age limits warn rather than block
+
+Most Kenyan medical schemes drop children at 18, or 25 in full time
+education, but the exact rule is per insurer. The panel flags a dependant
+marked as a child who is 18 or over instead of refusing the entry, since
+hardcoding one insurer's rule would be wrong for the others.
+
+---
+
+## 33. M-Pesa till support, and a paybill/till bug
+
+### Your setup needs Buy Goods, not Paybill
+
+`mpesa-stk-push` hardcoded `CustomerPayBillOnline`. A till plus store
+number is a **Buy Goods** merchant, which uses different fields:
+
+| | Paybill | Till |
+|---|---|---|
+| TransactionType | CustomerPayBillOnline | CustomerBuyGoodsOnline |
+| BusinessShortCode | the paybill | the **store** number |
+| PartyB | the paybill | the **till** number |
+
+A paybill puts one number in both fields; a till puts two different
+numbers in two fields. Sending paybill fields for a till is rejected by
+Safaricom.
+
+Now driven by `MPESA_SHORTCODE_TYPE` (`paybill` or `till`) plus
+`MPESA_STORE_NUMBER`. It fails with a clear message if configured for a
+till without a store number, rather than sending a malformed request.
+
+Also fixed while doing this: the STK password is a base64 of
+shortcode + passkey + timestamp, and the shortcode inside it must match
+the `BusinessShortCode` field. It was being built from `MPESA_SHORTCODE`
+before the paybill/till branch was resolved, so a till would have sent a
+password derived from the wrong number and failed authentication. The
+resolution now happens before the password is computed.
+
+### STK push cannot be done without Daraja
+
+Worth recording plainly, because it shapes the options. Daraja is
+Safaricom's API; STK push (the PIN prompt on the customer's phone) is a
+Daraja endpoint. There is no alternative route to that prompt.
+
+STK push needs four things: consumer key, consumer secret, the shortcode,
+and a **passkey**. The passkey is issued by Safaricom to the shortcode
+owner. Your own consumer key and secret authenticate you to the API but
+grant no rights over a shortcode you do not own, and a passkey cannot be
+derived. So a till belonging to someone else cannot be used, and even
+with their passkey the funds would settle to their account.
+
+The practical alternative is an aggregator (Paystack, which is already
+integrated here, or IntaSend, Pesapal, Flutterwave, Kopo Kopo). They hold
+the M-Pesa relationship, raise the prompt, and settle to your bank, which
+removes the need for your own shortcode, passkey, or Daraja account.
+
+---
+
+## 34. Four tiers: Free, Starter 499, Growth 1500, Agency 4900
+
+`supabase/migrations/0014_four_tier_plans.sql`.
+
+| | Free | Starter | Growth | Agency |
+|---|---|---|---|---|
+| Price | KES 0 | KES 499 | KES 1,500 | KES 4,900 |
+| Clients | 40 | 150 | 1,000 | Unlimited |
+| Policies | 25 | 150 | Unlimited | Unlimited |
+| Users | 1 | 1 | 10 | Unlimited |
+| Messages | 20 | 500 | Unlimited | Unlimited |
+| Ring | bronze | bronze | silver | gold |
+| Crown | no | yes | yes | yes |
+
+**Crown now means "pays", not "tier colour".** Four tiers against three
+metals meant Free and Starter share bronze, so the crown is what
+separates them. `TierAvatar` takes a `crowned` prop driven by
+`priceKesMonthly > 0` rather than inferring from the ring, and the context
+exposes `isPaidPlan` so no caller has to re-derive it.
+
+**Unspecified caps, filled in.** You gave prices, seats, and messages.
+Clients and policies for Starter and Growth were open, so: Starter 150
+clients and 150 policies, Growth 1,000 clients and unlimited policies.
+The policy ladder tightens deliberately (25, 150, unlimited, unlimited)
+because it is the main conversion lever; making Starter unlimited on
+policies would remove the reason to reach Growth.
+
+**Agency seats read as unlimited.** "Unlimited everything" and "25 plus
+users" conflict, so 25+ is treated as marketing copy and the cap is null.
+If a hard 25 was meant, change one value in 0014.
+
+### Three bugs this surfaced
+
+**Unlimited seats would have become one seat.** `TeamSection` did
+`currentPlan?.maxTeamMembers ?? 1`, and `max_team_members` is now null for
+Agency, so `?? 1` would cap an Agency customer at a single seat. Null now
+becomes `Infinity` for comparisons, with a separate label for display.
+
+**Unlimited messaging would have displayed as "0 messages a month."**
+`monthlyMessageAllowance` mapped `max_messages_monthly ?? ... ?? 0`, so
+null collapsed to zero. That field is now deleted rather than fixed: it
+silently turned "unlimited" into "none", which is the kind of default that
+produces a confident wrong number somewhere else later. Callers use
+`maxMessagesMonthly` and handle null explicitly.
+
+**A migration ordering bug of mine.** 0014 inserted null into
+`max_team_members` before dropping the NOT NULL that 0001 put there, so
+the whole statement would have failed. The ALTERs now run first.
+
+Also: `max_team_members` is nullable in the type and mapper, the billing
+page gained the policy line it was missing, the pricing grid is four
+across on large screens, and the upgrade card now points at Starter with
+its real price instead of a hardcoded Growth reference.
+
+---
+
+## 35. Wallet, own SMS gateway, promise to pay, spotlight tour
+
+`supabase/migrations/0015_wallet_gateway_promises.sql`.
+
+### Messaging unbundled
+
+Included allowance is now small and covers **SMS and email only**.
+WhatsApp always draws on the wallet, because Meta bills per conversation
+at roughly eight times an SMS and that single line item was what made
+every tier unprofitable.
+
+`charge_for_message()` is called BEFORE dispatch, not after, so a message
+is never sent that cannot be paid for. Balance is held in cents to avoid
+float drift, and every movement is a ledger row rather than an update to
+a running total; a bare balance column leaves you unable to answer "where
+did my credit go", which is the first thing a customer asks.
+
+### Bring your own gateway
+
+Growth and Agency can connect their own Africa's Talking account.
+`sms_gateways` has **no select policy** for normal users, deliberately:
+nothing in the app needs to read the key back, so `my_sms_gateway()`
+returns a `has_api_key` boolean instead and the secret never reaches a
+browser. Verification runs in an edge function because the key must not
+leave our server.
+
+The setup panel walks through registration as five numbered steps rather
+than a link. The sender ID step is called out specifically, because it
+needs Safaricom approval and takes days, and it is the step people miss.
+
+### Promise to pay
+
+From your AR point: a debtor who names a date is far likelier to pay than
+one chased on a generic schedule. `payment_promises` captures the amount,
+the date they gave, and their words verbatim. A reminder goes out the day
+before; anything still open the day after is marked broken and raises a
+high-priority task. `client_promise_record()` gives a kept/broken count
+for the client profile, so whoever picks up the phone next knows who they
+are dealing with.
+
+A promise that quietly expires is worse than none, because the client
+learns the date was never real.
+
+### Spotlight tour replaces the old one
+
+`SpotlightTour.tsx` cuts a hole in a dim overlay around a real element
+and walks through the app. The dim layer is **four rectangles around the
+target rather than one div with a box-shadow hole**, so clicks reach the
+highlighted element and the person can actually use the thing being
+explained.
+
+Anchoring is by `data-tour` attribute, so a step survives markup changes.
+Sidebar anchors are derived from the route, which keeps them in sync with
+the nav automatically. Handled: target not mounted yet (navigate, then
+poll), below the fold (scroll, then re-measure after the scroll settles),
+never appears (skip the step rather than dead-end), layout shifts
+(reposition on scroll and resize), and tooltip overflow (flip and clamp).
+
+Removed a `nav-team` step that pointed at a route which does not exist,
+since Team is a Settings section. It would have been silently skipped.
+
+### Bugs found in my own work here
+
+- `my_wallet()` referenced `sms_gateways` before that table was created.
+  A language-sql body is validated at creation, so the migration would
+  have failed outright. Moved below the table.
+- The allowance ledger insert used `union all ... limit 1`, which has no
+  guaranteed row order and could have logged the wrong balance. Replaced
+  with a scalar subquery.
+- The gateway disconnect used `.neq()` to match every row and relied on
+  RLS alone to scope the delete. Now scoped explicitly by organization: a
+  query whose literal meaning is "delete every row" is one policy mistake
+  away from doing exactly that.

@@ -58,7 +58,7 @@ export interface Profile {
 
 // --- Subscription and billing ---------------------------------------------
 
-export type PlanKey = "free" | "growth" | "agency";
+export type PlanKey = "free" | "starter" | "growth" | "agency";
 
 export interface SubscriptionPlan {
   id: ID;
@@ -67,11 +67,10 @@ export interface SubscriptionPlan {
   priceKesMonthly: number;
   maxClients: number | null;
   maxPolicies: number | null;
-  maxTeamMembers: number;
+  maxTeamMembers: number | null;
   maxMessagesMonthly: number | null;
   automationEnabled: boolean;
   bulkImportEnabled: boolean;
-  monthlyMessageAllowance: number;
   trialDays: number;
   badgeTier: "bronze" | "silver" | "gold";
   tagline?: string;

@@ -38,6 +38,9 @@ export function Sidebar() {
             key={item.to}
             to={item.to}
             end={item.end}
+            /* Derived from the route so tour anchors stay in sync with the
+               nav automatically rather than being tagged by hand. */
+            data-tour={`nav-${item.to.split("/").pop() || "dashboard"}`}
             className={({ isActive }) =>
               `flex items-center gap-2.5 mx-2 my-0.5 px-2.5 py-2 rounded-[8px] text-[13px] transition-colors ${
                 isActive ? "bg-violet-50 text-violet-700 font-medium" : "text-ink-soft hover:bg-paper-sunk hover:text-ink"

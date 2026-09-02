@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Phone, MessageSquare, Mail, FileText, ClipboardList, CheckSquare, StickyNote,
-  ArrowLeft, Paperclip, Trash2,
+  ArrowLeft, Paperclip, Trash2, Users,
 } from "lucide-react";
 import { useApp } from "@/data/appStore";
 import { clientDisplayName } from "@/types";
@@ -14,6 +14,7 @@ import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { ActivityTimeline } from "./ActivityTimeline";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { PolicyMembersPanel } from "@/components/policies/PolicyMembersPanel";
 import { formatDate, formatDateTime, formatRelativeDay } from "@/lib/date";
 
 type Tab = "overview" | "policies" | "quotations" | "communications" | "tasks" | "documents" | "activity";
@@ -40,6 +41,7 @@ export function ClientProfile() {
   if (!client) return <EmptyState icon={FileText} title="Client not found" />;
 
   const policies = store.policiesForClient(client.id);
+  const [openMembers, setOpenMembers] = useState<Set<string>>(new Set());
   const quotations = store.quotationsForClient(client.id);
   const allTasks = store.tasksForClient(client.id);
   const tasks = allTasks.filter((t) => t.status === "open");
@@ -69,7 +71,7 @@ export function ClientProfile() {
               </div>
             </div>
           </div>
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap" data-tour="client-actions">
             <button className="wb-btn-secondary" onClick={() => open("log_call", client.id)}><Phone size={14} /> Call</button>
             <button className="wb-btn-secondary" onClick={() => open("log_message", client.id)}><MessageSquare size={14} /> Message</button>
             <button className="wb-btn-secondary" onClick={() => open("log_email", client.id)}><Mail size={14} /> Email</button>
@@ -190,19 +192,46 @@ export function ClientProfile() {
             <div className="divide-y divide-line">
               {policies.map((p) => {
                 const type = store.insuranceTypes.find((t) => t.id === p.insuranceTypeId);
+                const membersOpen = openMembers.has(p.id);
                 return (
-                  <div key={p.id} className="flex items-center gap-3 px-4 py-3">
-                    <RenewalGauge expiryDate={p.endDate} size={36} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13.5px] font-medium">{p.policyNumber}</p>
-                      <p className="text-[11.5px] text-ink-faint">
-                        {p.insurer} · started {formatDate(p.startDate)} · expires{" "}
-                        <EditableDate value={p.endDate} onSave={(newDate) => store.updatePolicyEndDate(p.id, newDate)} align="left" />
-                      </p>
+                  <div key={p.id}>
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <RenewalGauge expiryDate={p.endDate} size={36} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-medium">{p.policyNumber}</p>
+                        <p className="text-[11.5px] text-ink-faint">
+                          {p.insurer} · started {formatDate(p.startDate)} · expires{" "}
+                          <EditableDate value={p.endDate} onSave={(newDate) => store.updatePolicyEndDate(p.id, newDate)} align="left" />
+                        </p>
+                      </div>
+                      {type && <InsuranceTypeBadge label={type.label} color={type.color} />}
+                      <span className="text-[12.5px] font-mono w-24 text-right hidden sm:block">KES {p.premiumKes.toLocaleString()}</span>
+                      <button
+                        onClick={() =>
+                          setOpenMembers((s) => {
+                            const next = new Set(s);
+                            next.has(p.id) ? next.delete(p.id) : next.add(p.id);
+                            return next;
+                          })
+                        }
+                        className={`flex items-center gap-1 text-[11.5px] rounded-full px-2.5 py-1 shrink-0 transition-colors ${
+                          membersOpen ? "bg-violet-50 text-violet-700" : "text-ink-soft hover:bg-paper-sunk"
+                        }`}
+                      >
+                        <Users size={12} />
+                        {client.clientType === "company" ? "Members" : "Family"}
+                      </button>
+                      <StatusBadge status={p.status} kind="policy" />
                     </div>
-                    {type && <InsuranceTypeBadge label={type.label} color={type.color} />}
-                    <span className="text-[12.5px] font-mono w-24 text-right">KES {p.premiumKes.toLocaleString()}</span>
-                    <StatusBadge status={p.status} kind="policy" />
+                    {membersOpen && (
+                      <div className="px-4 pb-4 pt-1 bg-paper-sunk/30">
+                        <PolicyMembersPanel
+                          policyId={p.id}
+                          clientType={client.clientType === "company" ? "company" : "individual"}
+                          clientName={clientDisplayName(client)}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}

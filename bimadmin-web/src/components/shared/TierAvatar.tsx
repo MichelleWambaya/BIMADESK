@@ -15,21 +15,21 @@ export type BadgeTier = "bronze" | "silver" | "gold";
 const TIER = {
   bronze: {
     ring: "linear-gradient(140deg, #C68A4B, #8A5A2B)",
-    crownColor: "",
-    glow: "none",
-    label: "Free",
+    crownColor: "#C68A4B",
+    glow: "0 0 0 1px rgba(198,138,75,0.3), 0 2px 8px -2px rgba(138,90,43,0.45)",
+    label: "Bronze",
   },
   silver: {
     ring: "linear-gradient(140deg, #E8ECF2, #A8B2C1)",
     crownColor: "#B6BFCC",
     glow: "0 0 0 1px rgba(232,236,242,0.35), 0 2px 10px -2px rgba(168,178,193,0.55)",
-    label: "Growth",
+    label: "Silver",
   },
   gold: {
     ring: "linear-gradient(140deg, #F6D66B, #C99A22)",
     crownColor: "#E8BC3E",
     glow: "0 0 0 1px rgba(246,214,107,0.4), 0 2px 12px -2px rgba(201,154,34,0.6)",
-    label: "Agency",
+    label: "Gold",
   },
 } as const;
 
@@ -46,7 +46,11 @@ interface Props {
   avatarUrl?: string | null;
   fallbackInitial: string;
   avatarColor?: string;
-  showCrown?: boolean;
+  /** Whether to draw the crown. Driven by whether the plan is PAID, not
+   *  by tier colour: Free and Starter both use the bronze ring, and the
+   *  crown is what separates them. So the crown reads as "this person
+   *  pays", which is the distinction that matters. */
+  crowned?: boolean;
   title?: string;
 }
 
@@ -56,7 +60,7 @@ export function TierAvatar({
   avatarUrl,
   fallbackInitial,
   avatarColor = "violet",
-  showCrown = true,
+  crowned = false,
   title,
 }: Props) {
   const t = TIER[tier] ?? TIER.bronze;
@@ -96,9 +100,9 @@ export function TierAvatar({
         )}
       </div>
 
-      {/* Crown only for paid tiers. Free deliberately has none, so the
-          crown means something rather than being decoration everyone has. */}
-      {showCrown && tier !== "bronze" && (
+      {/* Free deliberately has none, so the crown means something rather
+          than being decoration everyone has. */}
+      {crowned && (
         <span
           className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center"
           style={{ top: -(size * 0.28), lineHeight: 0 }}
@@ -112,8 +116,4 @@ export function TierAvatar({
       )}
     </div>
   );
-}
-
-export function tierLabel(tier: BadgeTier) {
-  return (TIER[tier] ?? TIER.bronze).label;
 }

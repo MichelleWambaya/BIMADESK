@@ -16,12 +16,14 @@ import { DuplicateFinder } from "./DuplicateFinder";
 import { IntegrationsSection } from "./IntegrationsSection";
 import { UserGuideSection } from "./UserGuideSection";
 import { TemplatesSection } from "./TemplatesSection";
+import { MessagingSection } from "./MessagingSection";
 
-type Section = "account" | "team" | "appearance" | "products" | "automations" | "templates" | "reminders" | "integrations" | "data" | "guide";
+type Section = "account" | "team" | "appearance" | "products" | "automations" | "templates" | "reminders" | "messaging" | "integrations" | "data" | "guide";
 
 const SECTIONS: { key: Section; label: string }[] = [
   { key: "account", label: "Account" },
   { key: "team", label: "Team" },
+  { key: "messaging", label: "Messaging and SMS" },
   { key: "appearance", label: "Appearance" },
   { key: "products", label: "Insurance products" },
   { key: "automations", label: "Automations" },
@@ -80,6 +82,7 @@ export function SettingsPage() {
       <div className="flex-1 space-y-4">
         {section === "account" && <AccountSection />}
         {section === "team" && <TeamSection />}
+        {section === "messaging" && <MessagingSection />}
         {section === "appearance" && <AppearanceSection />}
 
         {section === "products" && (

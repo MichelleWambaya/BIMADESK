@@ -56,7 +56,13 @@ export function AdminPlanTester() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="pt-2">
-                  <TierAvatar tier={tier} size={34} fallbackInitial={initial} avatarColor={profile?.avatarColor} />
+                  <TierAvatar
+                    tier={tier}
+                    size={34}
+                    crowned={plan.priceKesMonthly > 0}
+                    fallbackInitial={initial}
+                    avatarColor={profile?.avatarColor}
+                  />
                 </div>
                 {active && (
                   <span className="flex items-center gap-1 text-[10.5px] text-amber-300 bg-amber-500/20 rounded-full px-2 py-0.5">
@@ -73,14 +79,22 @@ export function AdminPlanTester() {
               <ul className="mt-3 space-y-1 text-[11.5px] text-white/55">
                 <li>{plan.maxClients == null ? "Unlimited clients" : `${plan.maxClients} clients`}</li>
                 <li>{plan.maxPolicies == null ? "Unlimited policies" : `${plan.maxPolicies} policies`}</li>
-                <li>{plan.maxTeamMembers} {plan.maxTeamMembers === 1 ? "seat" : "seats"}</li>
+                <li>
+                  {plan.maxTeamMembers == null
+                    ? "Unlimited seats"
+                    : `${plan.maxTeamMembers} ${plan.maxTeamMembers === 1 ? "seat" : "seats"}`}
+                </li>
                 <li>
                   {plan.maxMessagesMonthly == null
                     ? "Unlimited messages"
                     : `${plan.maxMessagesMonthly.toLocaleString()} messages a month`}
                 </li>
                 <li className="flex items-center gap-1 pt-1 text-white/40">
-                  {tier === "bronze" ? "No crown" : <><Crown size={10} fill="currentColor" /> {tier} crown</>}
+                  {plan.priceKesMonthly === 0 ? (
+                    "Bronze ring, no crown"
+                  ) : (
+                    <><Crown size={10} fill="currentColor" /> {tier} crown</>
+                  )}
                 </li>
               </ul>
 

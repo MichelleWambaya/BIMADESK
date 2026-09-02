@@ -18,7 +18,7 @@ export function QuickAddMenu() {
 
   return (
     <div className="relative">
-      <button
+      <button data-tour="quick-add"
         className="wb-btn-primary !rounded-full !px-3.5"
         onClick={() => setOpen((v) => !v)}
         onBlur={() => setTimeout(() => setOpen(false), 120)}

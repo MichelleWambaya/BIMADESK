@@ -20,7 +20,11 @@ export function TeamSection() {
   const [creating, setCreating] = useState(false);
 
   const seatsUsed = members.length;
-  const seatLimit = currentPlan?.maxTeamMembers ?? 1;
+  // null means unlimited on this plan. Defaulting null to 1 would cap an
+  // Agency customer at a single seat, so unlimited is represented as
+  // Infinity for the comparisons below rather than coerced to a number.
+  const seatLimit = currentPlan?.maxTeamMembers ?? Infinity;
+  const seatLimitLabel = Number.isFinite(seatLimit) ? String(seatLimit) : "unlimited";
   const seatsFull = seatsUsed >= seatLimit;
 
   async function load() {
@@ -65,7 +69,7 @@ export function TeamSection() {
         <div className="flex items-center justify-between px-5 py-4">
           <div>
             <p className="text-[13px] font-semibold">{organization?.name}</p>
-            <p className="text-[11.5px] text-ink-faint">{seatsUsed} of {seatLimit} seat{seatLimit === 1 ? "" : "s"} used on your plan</p>
+            <p className="text-[11.5px] text-ink-faint">{seatsUsed} of {seatLimitLabel} seat{seatLimit === 1 ? "" : "s"} used on your plan</p>
           </div>
           <button className="wb-btn-secondary !text-[12.5px]" onClick={createInvite} disabled={creating || seatsFull}>
             <UserPlus size={14} /> Invite teammate

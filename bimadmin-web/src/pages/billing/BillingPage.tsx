@@ -137,8 +137,9 @@ export function BillingPage() {
               {p.description && <p className="text-[11.5px] text-ink-soft mt-2">{p.description}</p>}
               <ul className="text-[12px] text-ink-soft mt-3 space-y-1.5 flex-1">
                 <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> {p.maxClients ? `Up to ${p.maxClients.toLocaleString()} clients` : "Unlimited clients"}</li>
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> {p.maxTeamMembers === 1 ? "Just you" : `Up to ${p.maxTeamMembers} team members`}</li>
-                <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> {p.monthlyMessageAllowance.toLocaleString()} messages a month</li>
+                <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> {p.maxPolicies == null ? "Unlimited policies" : `Up to ${p.maxPolicies.toLocaleString()} policies`}</li>
+                <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> {p.maxTeamMembers == null ? "Unlimited team members" : p.maxTeamMembers === 1 ? "Just you" : `Up to ${p.maxTeamMembers} team members`}</li>
+                <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> {p.maxMessagesMonthly == null ? "Unlimited messages" : `${p.maxMessagesMonthly.toLocaleString()} messages a month`}</li>
                 <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> Renewal automation</li>
               </ul>
               {isCurrent ? (

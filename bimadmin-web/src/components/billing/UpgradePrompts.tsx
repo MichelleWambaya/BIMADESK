@@ -44,6 +44,8 @@ export function UpgradeCard() {
 
   if (!effectivePlan || effectivePlan.priceKesMonthly > 0) return null;
 
+  // plans arrive sorted by sort_order, so the first paid plan is the
+  // cheapest step up rather than an arbitrary one.
   const nextPlan = plans.find((p) => p.priceKesMonthly > 0);
   const nearAnyLimit =
     (effectivePlan.maxPolicies != null && usage.policies >= effectivePlan.maxPolicies * 0.7) ||
@@ -64,7 +66,7 @@ export function UpgradeCard() {
           <p className="text-[12.5px] text-ink-soft mt-1">
             {nearAnyLimit
               ? "Add unlimited policies and more clients before you hit the cap."
-              : `${nextPlan?.name ?? "Growth"} lifts the caps and gives you a bigger message allowance. Free for ${nextPlan?.trialDays ?? 14} days.`}
+              : `${nextPlan?.name ?? "Starter"} starts at KES ${(nextPlan?.priceKesMonthly ?? 499).toLocaleString()} a month and lifts the caps. Free for ${nextPlan?.trialDays ?? 14} days.`}
           </p>
         </div>
       </div>

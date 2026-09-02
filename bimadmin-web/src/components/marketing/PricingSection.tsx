@@ -9,7 +9,7 @@ interface PublicPlan {
   price_kes_monthly: number;
   max_clients: number | null;
   max_policies: number | null;
-  max_team_members: number;
+  max_team_members: number | null;
   max_messages_monthly: number | null;
   trial_days: number;
   badge_tier: "bronze" | "silver" | "gold";
@@ -17,7 +17,9 @@ interface PublicPlan {
   sort_order: number;
 }
 
-const CROWN_COLOR = { bronze: null, silver: "#B6BFCC", gold: "#E8BC3E" } as const;
+// Crown colour by ring tier. Whether a crown shows at all is decided by
+// price, not tier, since Free and Starter share bronze.
+const CROWN_COLOR = { bronze: "#C68A4B", silver: "#B6BFCC", gold: "#E8BC3E" } as const;
 
 /**
  * Pricing read from the database rather than hardcoded here.
@@ -51,15 +53,15 @@ export function PricingSection() {
       </div>
 
       {!loaded ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[0, 1, 2].map((i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((i) => (
             <div key={i} className="wb-card p-5 h-64 animate-pulse bg-paper-sunk" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {plans.map((p) => {
-            const crown = CROWN_COLOR[p.badge_tier];
+            const crown = p.price_kes_monthly > 0 ? CROWN_COLOR[p.badge_tier] : null;
             // The middle tier is the one most people should land on, so it
             // gets the visual weight. Standard three-tier anchoring.
             const featured = p.badge_tier === "silver";
@@ -68,7 +70,7 @@ export function PricingSection() {
               <div
                 key={p.key}
                 className={`wb-card p-5 flex flex-col relative ${
-                  featured ? "ring-2 ring-violet-500 md:-mt-3 md:mb-3" : ""
+                  featured ? "ring-2 ring-violet-500 lg:-mt-3 lg:mb-3" : ""
                 }`}
               >
                 {featured && (
@@ -102,7 +104,9 @@ export function PricingSection() {
                   </li>
                   <li className="flex items-start gap-1.5">
                     <Check size={12} className="text-emerald-500 shrink-0 mt-1" />
-                    {p.max_team_members} {p.max_team_members === 1 ? "user" : "users"}
+                    {p.max_team_members == null
+                      ? "Unlimited users"
+                      : `${p.max_team_members} ${p.max_team_members === 1 ? "user" : "users"}`}
                   </li>
                   <li className="flex items-start gap-1.5">
                     <Check size={12} className="text-emerald-500 shrink-0 mt-1" />

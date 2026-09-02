@@ -4,13 +4,13 @@ import { Settings, LogOut, CreditCard, ChevronDown, Mail } from "lucide-react";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { NotificationBell } from "./NotificationBell";
 import { QuickAddMenu } from "./QuickAddMenu";
-import { TierAvatar, tierLabel } from "@/components/shared/TierAvatar";
+import { TierAvatar } from "@/components/shared/TierAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export function TopBar() {
   const { profile, organization, signOut } = useAuth();
-  const { badgeTier, effectivePlan, isPreviewing } = useSubscription();
+  const { badgeTier, isPaidPlan, effectivePlan, isPreviewing } = useSubscription();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export function TopBar() {
     };
   }, [open]);
 
-  const initial = (profile?.fullName || profile?.fullName || "?").slice(0, 1).toUpperCase();
+  const initial = (profile?.fullName || profile?.email || "?").slice(0, 1).toUpperCase();
 
   return (
     <header className="sticky top-0 z-20 bg-paper/90 backdrop-blur-md border-b border-line px-4 md:px-6 py-2.5 flex items-center gap-3">
@@ -52,7 +52,7 @@ export function TopBar() {
 
       {/* Profile block, far top right. Grouped as one unit with a divider
           so it reads as "you" rather than another toolbar icon. */}
-      <div className="relative pl-2 md:pl-3 ml-1 border-l border-line" ref={menuRef}>
+      <div className="relative pl-2 md:pl-3 ml-1 border-l border-line" ref={menuRef} data-tour="topbar-profile">
         <button
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 rounded-full py-1 pl-1 pr-1.5 hover:bg-paper-sunk transition-colors"
@@ -62,6 +62,7 @@ export function TopBar() {
           <TierAvatar
             tier={badgeTier}
             size={32}
+            crowned={isPaidPlan}
             avatarUrl={profile?.avatarUrl}
             fallbackInitial={initial}
             avatarColor={profile?.avatarColor}
@@ -71,7 +72,7 @@ export function TopBar() {
               {profile?.fullName || "Your account"}
             </span>
             <span className="text-[10.5px] text-ink-faint">
-              {isPreviewing ? `Previewing ${effectivePlan?.name}` : tierLabel(badgeTier)}
+              {isPreviewing ? `Previewing ${effectivePlan?.name}` : effectivePlan?.name ?? "Free"}
             </span>
           </span>
           <ChevronDown size={13} className="text-ink-faint hidden md:block" />
@@ -86,6 +87,7 @@ export function TopBar() {
               <TierAvatar
                 tier={badgeTier}
                 size={38}
+                crowned={isPaidPlan}
                 avatarUrl={profile?.avatarUrl}
                 fallbackInitial={initial}
                 avatarColor={profile?.avatarColor}
