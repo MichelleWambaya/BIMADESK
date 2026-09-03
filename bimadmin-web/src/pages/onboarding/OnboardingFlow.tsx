@@ -171,7 +171,7 @@ export function OnboardingFlow() {
                 >
                   <p className="text-white text-[13.5px] font-medium">{p.name}</p>
                   <p className="text-white/70 text-[12px] mt-0.5">
-                    {p.priceKesMonthly === 0 ? "Free" : `KES ${p.priceKesMonthly.toLocaleString()} / month`}
+                    {p.priceUsdCents === 0 ? "Free" : `$${(p.priceUsdCents / 100).toFixed(0)} / month`}
                   </p>
                   <p className="text-white/50 text-[11px] mt-1">
                     {p.maxClients ? `Up to ${p.maxClients} clients` : "Unlimited clients"}, {p.automationEnabled ? "automation included" : "no automation"}
@@ -189,7 +189,7 @@ export function OnboardingFlow() {
           <div className="wb-glass p-7 space-y-4">
             <div>
               <h2 className="font-semibold text-ink text-lg">Pay for {selectedPlan.name}</h2>
-              <p className="text-ink-soft text-[12.5px] mt-1">KES {selectedPlan.priceKesMonthly.toLocaleString()} per month, billed monthly.</p>
+              <p className="text-ink-soft text-[12.5px] mt-1">${(selectedPlan.priceUsdCents / 100).toFixed(0)} per month{selectedPlan.priceKes ? `, charged as about KES ${selectedPlan.priceKes.toLocaleString()}` : ""}.</p>
             </div>
             <PaymentPanel organizationId={profile.organizationId} plan={selectedPlan} onPaid={onPaymentSuccess} />
             <button className="text-[12.5px] text-ink-faint underline" onClick={() => setStep("plan")}>Choose a different plan</button>

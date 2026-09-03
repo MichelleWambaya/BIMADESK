@@ -6,11 +6,13 @@ import { supabase } from "@/lib/supabaseClient";
 interface PublicPlan {
   key: string;
   name: string;
-  price_kes_monthly: number;
+  price_usd_cents: number;
+  price_kes: number;
   max_clients: number | null;
   max_policies: number | null;
   max_team_members: number | null;
   max_messages_monthly: number | null;
+  included_sms_monthly: number;
   trial_days: number;
   badge_tier: "bronze" | "silver" | "gold";
   tagline: string | null;
@@ -61,7 +63,7 @@ export function PricingSection() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {plans.map((p) => {
-            const crown = p.price_kes_monthly > 0 ? CROWN_COLOR[p.badge_tier] : null;
+            const crown = p.price_usd_cents > 0 ? CROWN_COLOR[p.badge_tier] : null;
             // The middle tier is the one most people should land on, so it
             // gets the visual weight. Standard three-tier anchoring.
             const featured = p.badge_tier === "silver";
@@ -85,10 +87,12 @@ export function PricingSection() {
                 </div>
 
                 <p className="font-display text-2xl mt-1">
-                  {p.price_kes_monthly === 0 ? "Free" : `KES ${p.price_kes_monthly.toLocaleString()}`}
+                  {p.price_usd_cents === 0 ? "Free" : `$${(p.price_usd_cents / 100).toFixed(0)}`}
                 </p>
                 <p className="text-[11.5px] text-ink-faint">
-                  {p.price_kes_monthly === 0 ? "forever" : "per month"}
+                  {p.price_usd_cents === 0
+                    ? "forever"
+                    : `per month, about KES ${p.price_kes.toLocaleString()}`}
                 </p>
 
                 {p.tagline && <p className="text-[12px] text-ink-soft mt-2.5">{p.tagline}</p>}

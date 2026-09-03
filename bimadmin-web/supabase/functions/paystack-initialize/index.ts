@@ -23,9 +23,12 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   try {
-    const { organizationId, planId, email, amountKes } = await req.json();
-    if (!organizationId || !planId || !email || !amountKes) {
-      return new Response(JSON.stringify({ error: "Missing organizationId, planId, email, or amountKes" }), { status: 200 });
+    // amountKes is not accepted from the caller. It used to be, and was
+    // passed straight to Paystack and onto the payments row, so anyone
+    // could subscribe to any plan for any amount they chose.
+    const { organizationId, planId, email } = await req.json();
+    if (!organizationId || !planId || !email) {
+      return new Response(JSON.stringify({ error: "Missing organizationId, planId, or email" }), { status: 200 });
     }
 
     const { error: authError } = await requireOrgMember(req, organizationId);
@@ -41,6 +44,30 @@ Deno.serve(async (req) => {
       );
     }
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    const { data: planRow, error: planError } = await supabase
+      .from("subscription_plans")
+      .select("key, price_usd_cents, is_active")
+      .eq("id", planId)
+      .maybeSingle();
+
+    if (planError || !planRow || !planRow.is_active) {
+      return new Response(JSON.stringify({ error: "That plan is not available." }), { status: 200 });
+    }
+    if (!planRow.price_usd_cents || planRow.price_usd_cents <= 0) {
+      return new Response(JSON.stringify({ error: "The free plan does not require payment." }), { status: 200 });
+    }
+
+    const { data: quoted, error: rateError } = await supabase.rpc("plan_price_kes", {
+      p_plan_key: planRow.key,
+    });
+    if (rateError || !quoted || quoted <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Could not work out the price in shillings. Check the exchange rate is configured." }),
+        { status: 200 }
+      );
+    }
+    const amountKes = quoted as number;
 
     const { data: payment, error } = await supabase
       .from("payments")

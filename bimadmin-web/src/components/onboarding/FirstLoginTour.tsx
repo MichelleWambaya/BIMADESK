@@ -30,7 +30,7 @@ export function FirstLoginTour() {
 
   const steps = buildTourSteps({
     canSeeTeam: (effectivePlan?.maxTeamMembers ?? 1) !== 1 || isAdmin,
-    isFreePlan: (effectivePlan?.priceKesMonthly ?? 0) === 0,
+    isFreePlan: (effectivePlan?.priceUsdCents ?? 0) === 0,
   });
 
   return (

@@ -3,14 +3,13 @@ import { Upload, ArrowRight, Check, AlertTriangle, FileSpreadsheet, FileText, Fi
 import { useApp } from "@/data/appStore";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { parseImportFile, detectKind, ImportSourceKind } from "@/lib/importParsers";
+import { IMPORT_FIELDS as FIELDS, autoMapColumns, normaliseClientType, mappingConfidence } from "@/lib/importMapping";
+import { ClientType } from "@/types";
 
 type Step = "upload" | "map" | "preview" | "importing" | "done";
 
-const FIELDS = [
-  { key: "name", label: "Client name" },
-  { key: "phone", label: "Phone" },
-  { key: "email", label: "Email" },
-];
+// Field list and matching moved to src/lib/importMapping.ts, which
+// handles the header variants real books actually use.
 
 const MAX_ROWS = 1000;
 const LARGE_FILE_BYTES = 3 * 1024 * 1024;
@@ -66,12 +65,7 @@ export function ImportWizard() {
       setSourceKind(parsed.kind);
       setParseWarning(parsed.warning ?? null);
 
-      const auto: Record<string, string> = {};
-      for (const f of FIELDS) {
-        const match = parsed.headers.find((h) => h.toLowerCase().replace(/\s/g, "").includes(f.key.toLowerCase()));
-        if (match) auto[f.key] = match;
-      }
-      setMapping(auto);
+      setMapping(autoMapColumns(parsed.headers));
       setStep("map");
     } catch (err) {
       setParsing(false);
@@ -96,11 +90,18 @@ export function ImportWizard() {
       const name = mapping.name ? r[mapping.name] : "";
       const [firstName, ...rest] = (name || "Imported client").split(" ");
       return {
-        clientType: "individual" as const,
         firstName,
         lastName: rest.join(" ") || undefined,
         phone: mapping.phone ? r[mapping.phone] : "",
         email: mapping.email ? r[mapping.email] : undefined,
+        clientType: normaliseClientType(mapping.clientType ? r[mapping.clientType] : undefined) as ClientType,
+        nationalId: mapping.nationalId ? r[mapping.nationalId] : undefined,
+        kraPin: mapping.kraPin ? r[mapping.kraPin] : undefined,
+        registrationNumber: mapping.registrationNumber ? r[mapping.registrationNumber] : undefined,
+        altPhone: mapping.altPhone ? r[mapping.altPhone] : undefined,
+        city: mapping.city ? r[mapping.city] : undefined,
+        contactPersonName: mapping.contactPersonName ? r[mapping.contactPersonName] : undefined,
+        notes: mapping.notes ? r[mapping.notes] : undefined,
       };
     });
 

@@ -11,15 +11,41 @@ export async function getAccessToken(env: string, key: string, secret: string) {
   const res = await fetch(`${darajaBaseUrl(env)}/oauth/v1/generate?grant_type=client_credentials`, {
     headers: { Authorization: `Basic ${credentials}` },
   });
-  if (!res.ok) throw new Error("Could not authenticate with Safaricom Daraja API");
+
+  // Safaricom's body explains the failure; discarding it was turning a
+  // clear "invalid credentials" into a generic message and sending people
+  // hunting through the wrong settings.
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    if (res.status === 400 || res.status === 401) {
+      throw new Error(
+        `Safaricom rejected your consumer key or secret (HTTP ${res.status}). Check they are copied from the same Daraja app, with no trailing spaces, and that the app is for the environment you are using (${env}). ${body}`
+      );
+    }
+    throw new Error(`Daraja auth failed with HTTP ${res.status}. ${body}`);
+  }
+
   const data = await res.json();
+  if (!data.access_token) {
+    throw new Error(`Daraja returned no access token. Response was: ${JSON.stringify(data)}`);
+  }
   return data.access_token as string;
 }
 
+/**
+ * Daraja wants YYYYMMDDHHmmss in East Africa Time, and compares it
+ * against its own clock. Supabase edge functions run in UTC, so using
+ * local server time sent a timestamp three hours behind Nairobi, which
+ * Daraja can reject. EAT is UTC+3 year round with no daylight saving, so
+ * a fixed offset is correct rather than an approximation.
+ */
 export function timestampNow() {
-  const d = new Date();
+  const nairobi = new Date(Date.now() + 3 * 60 * 60 * 1000);
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  return (
+    `${nairobi.getUTCFullYear()}${pad(nairobi.getUTCMonth() + 1)}${pad(nairobi.getUTCDate())}` +
+    `${pad(nairobi.getUTCHours())}${pad(nairobi.getUTCMinutes())}${pad(nairobi.getUTCSeconds())}`
+  );
 }
 
 export function lipaNaMpesaPassword(shortcode: string, passkey: string, timestamp: string) {

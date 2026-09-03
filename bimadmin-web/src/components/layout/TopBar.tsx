@@ -10,7 +10,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export function TopBar() {
   const { profile, organization, signOut } = useAuth();
-  const { badgeTier, isPaidPlan, effectivePlan, isPreviewing } = useSubscription();
+  const { badgeTier, isPaidPlan, planResolved, effectivePlan, isPreviewing } = useSubscription();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export function TopBar() {
     };
   }, [open]);
 
-  const initial = (profile?.fullName || profile?.email || "?").slice(0, 1).toUpperCase();
+  const initial = (profile?.fullName || profile?.fullName || "?").slice(0, 1).toUpperCase();
 
   return (
     <header className="sticky top-0 z-20 bg-paper/90 backdrop-blur-md border-b border-line px-4 md:px-6 py-2.5 flex items-center gap-3">
@@ -62,7 +62,7 @@ export function TopBar() {
           <TierAvatar
             tier={badgeTier}
             size={32}
-            crowned={isPaidPlan}
+            crowned={planResolved && isPaidPlan}
             avatarUrl={profile?.avatarUrl}
             fallbackInitial={initial}
             avatarColor={profile?.avatarColor}
@@ -72,7 +72,7 @@ export function TopBar() {
               {profile?.fullName || "Your account"}
             </span>
             <span className="text-[10.5px] text-ink-faint">
-              {isPreviewing ? `Previewing ${effectivePlan?.name}` : effectivePlan?.name ?? "Free"}
+              {isPreviewing ? `Previewing ${effectivePlan?.name}` : planResolved ? effectivePlan?.name : ""}
             </span>
           </span>
           <ChevronDown size={13} className="text-ink-faint hidden md:block" />
@@ -87,7 +87,7 @@ export function TopBar() {
               <TierAvatar
                 tier={badgeTier}
                 size={38}
-                crowned={isPaidPlan}
+                crowned={planResolved && isPaidPlan}
                 avatarUrl={profile?.avatarUrl}
                 fallbackInitial={initial}
                 avatarColor={profile?.avatarColor}

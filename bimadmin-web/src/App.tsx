@@ -10,6 +10,7 @@ import { RequireAuth, RequireOnboarding, RequireAdmin, RedirectIfAuthed } from "
 
 import { LandingPage } from "@/pages/marketing/Landing";
 import { PrivacyPage } from "@/pages/marketing/Privacy";
+import { Refunds } from "@/pages/marketing/Refunds";
 import { TermsPage } from "@/pages/marketing/Terms";
 import { FaqPage } from "@/pages/marketing/Faq";
 import { CookieConsent } from "@/components/marketing/CookieConsent";
@@ -23,6 +24,7 @@ import { BillingPage } from "@/pages/billing/BillingPage";
 import { NotFoundPage } from "@/pages/NotFound";
 
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { CommissionsPage } from "@/pages/app/CommissionsPage";
 import { ClientsPage } from "@/components/clients/ClientsPage";
 import { ClientProfile } from "@/components/clients/ClientProfile";
 import { LeadsPage } from "@/components/leads/LeadsPage";
@@ -56,6 +58,7 @@ export default function App() {
                   {/* Public marketing */}
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/refunds" element={<Refunds />} />
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/faq" element={<FaqPage />} />
                   <Route path="/invite/:code" element={<InviteAcceptPage />} />
@@ -78,6 +81,7 @@ export default function App() {
                   <Route element={<RequireAuth />}>
                     <Route path="/app" element={<AppShell />}>
                       <Route index element={<Dashboard />} />
+                      <Route path="commissions" element={<CommissionsPage />} />
                       <Route path="clients" element={<ClientsPage />} />
                       <Route path="clients/:id" element={<ClientProfile />} />
                       <Route path="leads" element={<LeadsPage />} />

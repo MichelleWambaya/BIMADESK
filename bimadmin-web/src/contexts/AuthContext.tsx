@@ -10,7 +10,6 @@ interface AuthContextValue {
   organization: Organization | null;
   loading: boolean;
   signUp: (input: { email: string; password: string }) => Promise<{ error: string | null; hasSession: boolean }>;
-  signInWithProvider: (provider: "google" | "azure") => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<{ error: string | null }>;
@@ -116,32 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? error.message : null };
   }
 
-  /** Starts an OAuth sign in. This redirects the browser away to the
-   * provider and back, so nothing after this call runs on success --
-   * the returned error only covers failing to start the flow at all.
-   *
-   * On return, onAuthStateChange picks up the new session and the route
-   * guards send the person to onboarding if they have no organization
-   * yet, which is exactly the behaviour a first-time OAuth signup needs.
-   * That means OAuth signup and OAuth login are the same code path; the
-   * only difference is whether a profile row already exists.
-   *
-   * Requires the provider to be enabled in your Supabase dashboard under
-   * Authentication, then Providers, with its client ID and secret. No
-   * amount of code here substitutes for that configuration. */
-  async function signInWithProvider(provider: "google" | "azure") {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/app`,
-        // Ask for a profile picture and email alongside identity, since
-        // the avatar is used in AccountSection when present.
-        scopes: provider === "google" ? "email profile" : undefined,
-      },
-    });
-    return { error: error ? error.message : null };
-  }
-
   async function signOut() {
     await supabase.auth.signOut();
   }
@@ -229,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, profile, organization, loading, signUp, signIn, signInWithProvider, signOut, sendPasswordReset, updatePassword, refreshProfile, updateProfile, uploadAvatar, removeAvatar, updateOrganization, completeSignupSetup, acceptTeamInvite, deleteAccount }}
+      value={{ session, profile, organization, loading, signUp, signIn, signOut, sendPasswordReset, updatePassword, refreshProfile, updateProfile, uploadAvatar, removeAvatar, updateOrganization, completeSignupSetup, acceptTeamInvite, deleteAccount }}
     >
       {children}
     </AuthContext.Provider>

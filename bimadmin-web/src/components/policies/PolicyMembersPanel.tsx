@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { UserPlus, Users, ChevronDown, ChevronRight, X, Building2, User } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { todayISO } from "@/lib/date";
+import { hasManyPrincipals } from "@/lib/clientTypes";
 
 interface Member {
   id: string;
@@ -48,10 +49,12 @@ export function PolicyMembersPanel({
   clientName,
 }: {
   policyId: string;
-  clientType: "individual" | "company";
+  clientType: string;
   clientName: string;
 }) {
-  const isCorporate = clientType === "company";
+  // Many principals, not literally "company": a sacco has the same shape,
+  // and a family has members but only one principal.
+  const isCorporate = hasManyPrincipals(clientType as "individual" | "company");
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);

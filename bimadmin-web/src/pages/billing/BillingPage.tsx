@@ -60,7 +60,7 @@ export function BillingPage() {
       setConfirmingDowngrade(plan);
       return;
     }
-    if (plan.priceKesMonthly === 0) refreshSubscription();
+    if (plan.priceUsdCents === 0) refreshSubscription();
     else setPayingPlan(plan);
   }
 
@@ -68,7 +68,7 @@ export function BillingPage() {
     if (!confirmingDowngrade) return;
     const plan = confirmingDowngrade;
     setConfirmingDowngrade(null);
-    if (plan.priceKesMonthly === 0) refreshSubscription();
+    if (plan.priceUsdCents === 0) refreshSubscription();
     else setPayingPlan(plan);
   }
 
@@ -132,8 +132,8 @@ export function BillingPage() {
           return (
             <div key={p.id} className={`wb-card p-4 flex flex-col ${isCurrent ? "border-2 border-violet-400" : ""}`}>
               <p className="text-[14px] font-semibold">{p.name}</p>
-              <p className="text-[20px] font-display mt-1">{p.priceKesMonthly === 0 ? "Free" : `KES ${p.priceKesMonthly.toLocaleString()}`}</p>
-              {p.priceKesMonthly > 0 && <p className="text-[11px] text-ink-faint">per month</p>}
+              <p className="text-[20px] font-display mt-1">{p.priceUsdCents === 0 ? "Free" : `$${(p.priceUsdCents / 100).toFixed(0)}`}</p>
+              {p.priceUsdCents > 0 && <p className="text-[11px] text-ink-faint">per month{p.priceKes ? `, about KES ${p.priceKes.toLocaleString()}` : ""}</p>}
               {p.description && <p className="text-[11.5px] text-ink-soft mt-2">{p.description}</p>}
               <ul className="text-[12px] text-ink-soft mt-3 space-y-1.5 flex-1">
                 <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> {p.maxClients ? `Up to ${p.maxClients.toLocaleString()} clients` : "Unlimited clients"}</li>
@@ -146,7 +146,7 @@ export function BillingPage() {
                 <span className="mt-3 text-[12px] text-violet-600 font-medium">Current plan</span>
               ) : (
                 <button className="mt-3 wb-btn-secondary justify-center" onClick={() => selectPlan(p)}>
-                  {p.priceKesMonthly === 0 ? "Switch to Free" : "Upgrade"}
+                  {p.priceUsdCents === 0 ? "Switch to Free" : "Upgrade"}
                 </button>
               )}
             </div>

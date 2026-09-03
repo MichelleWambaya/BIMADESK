@@ -1481,3 +1481,278 @@ since Team is a Settings section. It would have been silently skipped.
   RLS alone to scope the delete. Now scoped explicitly by organization: a
   query whose literal meaning is "delete every row" is one policy mistake
   away from doing exactly that.
+
+---
+
+## 36. M-Pesa diagnostics, and three real bugs
+
+### Why you saw an opaque edge function error
+
+Every credential was read as `Deno.env.get("X")!`. The `!` is a
+**TypeScript assertion and does nothing at runtime** — a missing secret
+came through as `undefined`, the function carried on with empty
+credentials, and it failed several calls later with a message that named
+nothing. That is why a configuration mistake looked like a code fault.
+
+There is now a preflight check that returns a sentence naming the
+problem, including format validation that catches the commonest mistake:
+Daraja's simulator shows both a **Passkey** (64 hex characters, fixed) and
+a **Password** (base64, changes every second, derived from
+shortcode + passkey + timestamp). Copying the Password into
+`MPESA_PASSKEY` can never authenticate. The check detects it by shape and
+says exactly that.
+
+It also catches: a real till used in sandbox (sandbox only accepts
+174379), `MPESA_SHORTCODE_TYPE=till` in sandbox (sandbox is paybill only),
+a non-https callback URL, and a malformed shortcode.
+
+### Timestamp was three hours off
+
+`timestampNow()` used local server time. Supabase edge functions run in
+**UTC**; Daraja expects **East Africa Time** and compares against its own
+clock. So every request carried a timestamp three hours behind Nairobi,
+which Daraja can reject. EAT is UTC+3 year round with no daylight saving,
+so a fixed offset is correct rather than an approximation.
+
+This one would have failed intermittently and inexplicably even with
+every credential correct.
+
+### Auth errors discarded Safaricom's explanation
+
+`getAccessToken` threw a fixed string and dropped the response body, which
+is where Safaricom explains the failure. It now distinguishes 400 and 401
+(bad key or secret, mismatched environment, trailing whitespace) from
+other failures and includes their message.
+
+### MPESA_SETUP.md
+
+Exact sandbox values, the passkey versus password trap, and the two
+separate deploys people miss: **running SQL does nothing for edge
+functions**, which read from a different secret store, and
+`supabase db push` against a hosted project is not the same as running
+migrations against localhost.
+
+---
+
+## 37. Bug fixes, Google sign in removed, client types, rejections, commission
+
+### The top bar / avatar bug, two causes
+
+**The crown was being clipped.** It sat at `top: -(size * 0.28)`, roughly
+9px above the avatar. The top bar uses `backdrop-blur-md`, and
+`backdrop-filter` establishes a containing block, so anything positioned
+outside the element's own box is cut off. It is now a corner badge inside
+the bounds, which is safe in any container and reads better at 32px where
+a floating crown looked like a stray icon.
+
+**The tier flickered on every load.** `effectivePlan` is null while plans
+fetch, so `isPaidPlan` read false and a paying customer saw a bronze ring
+with no crown snap to silver with one. Added `planResolved`; tier visuals
+are held back until the plan is known rather than rendering a wrong badge
+and correcting it.
+
+### Google sign in removed
+
+`OAuthButtons.tsx` deleted, `signInWithProvider` removed from AuthContext,
+both auth screens cleaned.
+
+### Client types
+
+`individual` and `company` became five: `individual`, `family`,
+`sole_proprietor`, `company`, `group`. Existing `company` rows stay valid.
+
+`sole_proprietor` is separate from `company` on purpose. It is legally a
+person, so it needs an ID rather than a certificate of incorporation, and
+filing it as a company means the KYC checklist asks for documents that do
+not exist.
+
+`kyc_requirements` holds the checklist per type as data, not hardcoded,
+because insurers demand different paperwork. Platform defaults ship with
+`organization_id` null; `client_kyc_status()` returns the checklist with
+whether each document is on file.
+
+### Policy rejections
+
+Status gained `draft`, `submitted`, `pending_documents`, `pending_payment`
+and `rejected`. Previously a bounced policy had nowhere to live, so it sat
+as `active` when it was not, or was deleted and the history lost.
+
+`policy_rejections` records the reason (bounced cheque, incomplete
+application, missing documents, failed KYC, legal or compliance, adverse
+medical, risk declined, inspection failed, and so on), plus
+**whose responsibility** it is, which is the difference between chasing
+the client and chasing the insurer.
+
+`reject_policy()` writes the rejection, moves the policy, and raises a
+task in one call, because a rejection with no task is a rejection nobody
+chases. Recoverable reasons park the policy in a waiting state rather
+than calling it rejected: a bounced cheque is `pending_payment`, missing
+documents is `pending_documents`.
+
+`superseded_by_policy_id` chains resubmissions so a policy can bounce
+several times without losing the trail.
+
+### Commission
+
+Rate stored as **basis points, not a percent**. 17.5% is 1750 bp and
+exact; as a float it is 0.17499999999999999 and every total computed from
+it drifts. Default per insurance type, overridable per policy, with a
+trigger that keeps the stored amount in agreement with the rate and
+premium beside it. `commission_summary()` reports by status.
+
+---
+
+## 38. USD pricing, palette repaint, logo, and a payment vulnerability
+
+### A real vulnerability, now closed
+
+`mpesa-stk-push` and `paystack-initialize` both took `amountKes` **from
+the request body** and passed it straight to the payment provider and onto
+the payments row. Anyone able to read the network tab could have
+subscribed to Agency for one shilling.
+
+Both now ignore any caller-supplied amount and derive it server side from
+the plan via `plan_price_kes()`. `amountKes` is gone from the client
+helper signatures so it cannot be reintroduced by accident.
+
+### USD pricing with shilling settlement
+
+Plans are priced in USD ($25 / $45 / $75) and displayed that way, with the
+shilling figure shown beside it. Quoting one currency and debiting another
+without saying so is how disputes start.
+
+`fx_rates` holds the rate with a validity window rather than one mutable
+value, so a payment taken last month can still be explained with the rate
+in force then. Rates are integers scaled by 10,000: as a float, a $25
+charge becomes 3236.2499999999995 shillings and the rounding drifts.
+
+**The rate used is written onto the payment row.** Recomputing what a past
+charge was worth from today's rate gives a different answer each time the
+report runs, which makes reconciling against an M-Pesa statement
+impossible.
+
+A `margin_bp` buffer (default 250) covers the gap between quoting and
+settling. Shilling amounts round **up to the nearest 10**, because M-Pesa
+cannot charge fractions and "KES 3,237" looks like an error to whoever is
+approving it on their handset.
+
+**The seeded rate is a placeholder.** Replace it before taking real money;
+a stale rate silently undercharges every customer.
+
+### Palette
+
+Repainted rather than restructured, since there are live users: the token
+names are unchanged, so every component using `bg-paper`, `text-ink` or
+`violet-500` follows automatically and no layout moved.
+
+Neutrals lost their violet tint, which is what made every screen read
+purple even where no accent was used; they are now warm paper over a deep
+teal-grey. Accents are deep teal and ochre.
+
+The `violet` scale keeps its name despite now being teal. Renaming would
+mean editing roughly a hundred files, which is not a risk worth taking on
+a live product for a colour change.
+
+### Gradients removed
+
+The aurora was three drifting radial gradients; it is now a flat ground, a
+hard-edged ochre disc, and a horizon line. Shapes carry the character, so
+no blur is needed. `wb-glass-dark` was frosted glass (blur plus
+translucency) and is now a solid panel. The upgrade card's gradient and
+blurred glow are flat. Only the tier rings keep a gradient, deliberately:
+it is what makes bronze, silver and gold read as metal rather than three
+coloured circles.
+
+The now-unused `wb-aurora-drift` keyframes were deleted.
+
+### Logo
+
+`public/favicon.svg` carries the **B alone** on a squared teal ground. The
+overlapping BA lockup is in `src/components/shared/Logo.tsx` and is used
+at 24px and up. Two overlapping letterforms become an unreadable smudge at
+16px, which is the size that actually matters in a browser tab, so the
+overlap lives where there is room for it to read as intentional. The A is
+ochre over the teal B so the two stay separable.
+
+### Bug in my own work
+
+The Tailwind config briefly contained `"#DFAF४6".replace("४","4")` — a
+Devanagari digit and a runtime string call in a config file. Corrected to
+a plain hex, and the config is now loaded with node to confirm it parses
+rather than assumed.
+
+---
+
+## 39. Import matching, client types, collapsible nav, commissions, refunds
+
+### Import: arbitrary spreadsheet columns
+
+`src/lib/importMapping.ts`. The old matcher only accepted a header that
+literally contained the field name, so it found "Email" and almost nothing
+else; every import became manual mapping.
+
+Matching now runs in tiers, strongest first, with each column claimed by
+only one field. That ordering matters: without it a sheet with both "Name"
+and "Business Name" binds the wrong one, and one with "Phone" and "Alt
+Phone" binds the alternate as primary. Tier 3 (substring) is restricted to
+synonyms of four characters or more, because otherwise "id" matches "Valid
+From" and "pin" matches "Shipping".
+
+Tested against five real header styles:
+
+| Sheet | Result |
+|---|---|
+| `INSURED, MOBILE NO, E-MAIL ADDRESS, ID NO, KRA PIN` | all five mapped |
+| `Full Names, Tel, Email, Type, Town` | all five mapped |
+| `Business Name, Contact Person, Phone (Primary), Alt Phone, Registration No` | all five mapped |
+| `Valid From, Shipping Zone, Names, Cell` | name and phone only, decoys correctly ignored |
+
+`normaliseClientType()` folds whatever someone typed ("Ltd", "SACCO",
+"chama", "sole trader") onto the enum.
+
+Extra columns now survive the trip: `NewClientInput` and the insert were
+only carrying name, phone and email, so national ID, KRA PIN,
+registration number, town and notes were being parsed and then silently
+dropped.
+
+### Client types unified
+
+`src/lib/clientTypes.ts` holds what each of the five types means. They
+were being handled as "company or not", which broke twice: a sacco was
+treated as an individual, and a family had no member schedule. The panel
+now keys off `hasManyPrincipals` rather than `=== "company"`, so a sacco
+gets the same shape as a company and a family gets one principal with
+dependants.
+
+`clientDisplayName` no longer returns "Unnamed client" for a group, and
+the type selector is a described grid rather than two buttons.
+
+### Collapsible sidebar
+
+Eleven flat items became five groups following the order of work.
+Collapse state is persisted, and read lazily rather than in an effect,
+which would flash the wide sidebar for one frame before collapsing.
+
+Width is a **class swap, not an animated width**. Animating width forces a
+full-page re-layout every frame, which is the performance cost worth
+avoiding; the colour transition is cheap.
+
+### Commissions
+
+New page at `/app/commissions`, gated to paid plans. Earned, received,
+still owed, and premium written, with an average rate and a policy by
+policy list.
+
+**A pre-existing bug found here.** 0001 shipped a `commission_pct` column
+that nothing ever wrote to, while the reports page computed earnings from
+it, so that figure has always displayed zero. Any value it held is folded
+into `commission_bp`, the column is dropped, and reports now read the
+stored amount.
+
+### Refund policy
+
+`/refunds`. Written around the distinction that actually causes disputes:
+the subscription paid to us, versus premium a client overpaid. We never
+receive premium, so we cannot refund it, and the page says so plainly
+rather than leaving someone to assume otherwise. Marked clearly as an
+unreviewed draft.

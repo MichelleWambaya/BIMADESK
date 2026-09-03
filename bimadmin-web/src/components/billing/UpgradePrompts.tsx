@@ -42,18 +42,19 @@ function Meter({ label, used, max }: { label: string; used: number; max: number 
 export function UpgradeCard() {
   const { effectivePlan, usage, plans } = useSubscription();
 
-  if (!effectivePlan || effectivePlan.priceKesMonthly > 0) return null;
+  if (!effectivePlan || effectivePlan.priceUsdCents > 0) return null;
 
   // plans arrive sorted by sort_order, so the first paid plan is the
   // cheapest step up rather than an arbitrary one.
-  const nextPlan = plans.find((p) => p.priceKesMonthly > 0);
+  const nextPlan = plans.find((p) => p.priceUsdCents > 0);
   const nearAnyLimit =
     (effectivePlan.maxPolicies != null && usage.policies >= effectivePlan.maxPolicies * 0.7) ||
     (effectivePlan.maxClients != null && usage.clients >= effectivePlan.maxClients * 0.7);
 
   return (
-    <div className="relative overflow-hidden rounded-[18px] border border-violet-200 bg-gradient-to-br from-violet-500/[0.07] via-paper-raised to-paper-raised p-5">
-      <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-violet-500/10 blur-2xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-[18px] border border-violet-200 bg-paper-raised p-5">
+      {/* Flat disc, not a blur. Same role, hard edge. */}
+      <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-violet-50 pointer-events-none" />
 
       <div className="relative flex items-start gap-3">
         <div className="w-9 h-9 rounded-[10px] bg-violet-500 flex items-center justify-center shrink-0">
@@ -66,7 +67,7 @@ export function UpgradeCard() {
           <p className="text-[12.5px] text-ink-soft mt-1">
             {nearAnyLimit
               ? "Add unlimited policies and more clients before you hit the cap."
-              : `${nextPlan?.name ?? "Starter"} starts at KES ${(nextPlan?.priceKesMonthly ?? 499).toLocaleString()} a month and lifts the caps. Free for ${nextPlan?.trialDays ?? 14} days.`}
+              : `${nextPlan?.name ?? "Starter"} is $${((nextPlan?.priceUsdCents ?? 2500) / 100).toFixed(0)} a month and lifts the caps. Free for ${nextPlan?.trialDays ?? 14} days.`}
           </p>
         </div>
       </div>

@@ -66,6 +66,7 @@ export function TierAvatar({
   const t = TIER[tier] ?? TIER.bronze;
   const ringWidth = size >= 40 ? 2.5 : 2;
   const inner = size - ringWidth * 2;
+  const crownBox = Math.max(13, Math.round(size * 0.44));
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }} title={title ?? t.label}>
@@ -75,7 +76,7 @@ export function TierAvatar({
           width: size,
           height: size,
           background: t.ring,
-          boxShadow: t.glow === "none" ? undefined : t.glow,
+          boxShadow: t.glow,
         }}
       >
         {avatarUrl ? (
@@ -100,16 +101,30 @@ export function TierAvatar({
         )}
       </div>
 
-      {/* Free deliberately has none, so the crown means something rather
-          than being decoration everyone has. */}
+      {/*
+        Corner badge rather than a crown floating above the head.
+        The previous version sat at a negative top offset, which was
+        clipped in the top bar: that header uses backdrop-filter, and
+        backdrop-filter establishes a containing block, so anything
+        positioned outside the element's own box gets cut off. Keeping the
+        crown inside the bounds makes it safe in any container, and it
+        stays legible at 32px where a floating crown read as a stray icon.
+      */}
       {crowned && (
         <span
-          className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center"
-          style={{ top: -(size * 0.28), lineHeight: 0 }}
+          className="absolute flex items-center justify-center rounded-full"
+          style={{
+            top: -1,
+            right: -1,
+            width: crownBox,
+            height: crownBox,
+            background: "rgb(var(--color-paper-raised))",
+            lineHeight: 0,
+          }}
         >
           <Crown
-            size={Math.max(11, size * 0.42)}
-            strokeWidth={2}
+            size={crownBox * 0.66}
+            strokeWidth={2.25}
             style={{ color: t.crownColor, fill: t.crownColor }}
           />
         </span>

@@ -59,7 +59,7 @@ export function AdminPlanTester() {
                   <TierAvatar
                     tier={tier}
                     size={34}
-                    crowned={plan.priceKesMonthly > 0}
+                    crowned={plan.priceUsdCents > 0}
                     fallbackInitial={initial}
                     avatarColor={profile?.avatarColor}
                   />
@@ -73,7 +73,7 @@ export function AdminPlanTester() {
 
               <p className="text-white text-[14px] font-semibold mt-3">{plan.name}</p>
               <p className="text-white/40 text-[11px]">
-                {plan.priceKesMonthly === 0 ? "Free" : `KES ${plan.priceKesMonthly.toLocaleString()} a month`}
+                {plan.priceUsdCents === 0 ? "Free" : `$${(plan.priceUsdCents / 100).toFixed(0)} a month`}
               </p>
 
               <ul className="mt-3 space-y-1 text-[11.5px] text-white/55">
@@ -90,7 +90,7 @@ export function AdminPlanTester() {
                     : `${plan.maxMessagesMonthly.toLocaleString()} messages a month`}
                 </li>
                 <li className="flex items-center gap-1 pt-1 text-white/40">
-                  {plan.priceKesMonthly === 0 ? (
+                  {plan.priceUsdCents === 0 ? (
                     "Bronze ring, no crown"
                   ) : (
                     <><Crown size={10} fill="currentColor" /> {tier} crown</>

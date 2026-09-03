@@ -27,7 +27,7 @@ export function PaymentPanel({
     if (!phone.trim()) return setError("Enter the M-Pesa phone number to pay from.");
     setError(null);
     setStage("waiting");
-    const { error, paymentId } = await startMpesaPayment({ organizationId, planId: plan.id, phone, amountKes: plan.priceKesMonthly });
+    const { error, paymentId } = await startMpesaPayment({ organizationId, planId: plan.id, phone });
     if (error || !paymentId) {
       setError(error ?? "Could not start the M-Pesa payment.");
       setStage("failed");
@@ -46,7 +46,7 @@ export function PaymentPanel({
   async function payWithCard() {
     if (!email.trim()) return setError("Enter an email for your receipt.");
     setError(null);
-    const { error, authorizationUrl } = await startPaystackPayment({ organizationId, planId: plan.id, email, amountKes: plan.priceKesMonthly });
+    const { error, authorizationUrl } = await startPaystackPayment({ organizationId, planId: plan.id, email });
     if (error || !authorizationUrl) {
       setError(error ?? "Could not start the card payment.");
       return;
@@ -71,7 +71,7 @@ export function PaymentPanel({
       <div className="flex flex-col items-center gap-3 py-8 text-center">
         <div className="w-8 h-8 border-2 border-violet-200 border-t-violet-500 rounded-full animate-spin" />
         <p className="text-[13px] font-medium">Check your phone</p>
-        <p className="text-[12.5px] text-ink-soft max-w-xs">Enter your M-Pesa PIN on the prompt sent to {phone} to complete the payment of KES {plan.priceKesMonthly.toLocaleString()}.</p>
+        <p className="text-[12.5px] text-ink-soft max-w-xs">Enter your M-Pesa PIN on the prompt sent to {phone} to complete the payment of KES {(plan.priceKes ?? 0).toLocaleString()}.</p>
       </div>
     );
   }
@@ -123,7 +123,7 @@ export function PaymentPanel({
       {stage !== "failed" && error && <p className="text-[12.5px] text-coral-500">{error}</p>}
 
       <button className="wb-btn-primary w-full justify-center" onClick={method === "mpesa" ? payWithMpesa : payWithCard}>
-        Pay KES {plan.priceKesMonthly.toLocaleString()}
+        Pay KES {(plan.priceKes ?? 0).toLocaleString()}
       </button>
     </div>
   );

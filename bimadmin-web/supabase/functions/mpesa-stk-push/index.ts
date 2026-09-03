@@ -37,13 +37,20 @@ import { darajaBaseUrl, getAccessToken, timestampNow, lipaNaMpesaPassword } from
 import { requireOrgMember } from "../_shared/auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   try {
-    const { organizationId, planId, phone, amountKes } = await req.json();
-    if (!organizationId || !planId || !phone || !amountKes) {
-      return new Response(JSON.stringify({ error: "Missing organizationId, planId, phone, or amountKes" }), { status: 200 });
+    // amountKes is deliberately NOT accepted from the caller.
+    //
+    // It used to be, which meant anyone who could read the network tab
+    // could subscribe to Agency for one shilling: the value was passed
+    // straight into the STK request and written to the payments row. The
+    // amount is now derived on the server from the plan, via
+    // plan_price_kes(), which also applies the current USD to KES rate.
+    const { organizationId, planId, phone } = await req.json();
+    if (!organizationId || !planId || !phone) {
+      return new Response(JSON.stringify({ error: "Missing organizationId, planId, or phone" }), { status: 200 });
     }
 
     const { error: authError } = await requireOrgMember(req, organizationId);
@@ -51,13 +58,111 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: authError }), { status: 200 });
     }
 
+    // Service-role client. Declared here because the plan and rate lookup
+    // below needs it; it used to be created further down, after the STK
+    // call, purely because nothing before that point touched the database.
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Resolve the plan and its shilling price on the server.
+    const { data: planRow, error: planError } = await supabase
+      .from("subscription_plans")
+      .select("key, name, price_usd_cents, is_active")
+      .eq("id", planId)
+      .maybeSingle();
+
+    if (planError || !planRow) {
+      return new Response(JSON.stringify({ error: "That plan does not exist." }), { status: 200 });
+    }
+    if (!planRow.is_active) {
+      return new Response(JSON.stringify({ error: "That plan is no longer available." }), { status: 200 });
+    }
+    if (!planRow.price_usd_cents || planRow.price_usd_cents <= 0) {
+      return new Response(JSON.stringify({ error: "The free plan does not require payment." }), { status: 200 });
+    }
+
+    const { data: kesAmount, error: rateError } = await supabase.rpc("plan_price_kes", {
+      p_plan_key: planRow.key,
+    });
+
+    if (rateError || !kesAmount || kesAmount <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Could not work out the price in shillings. Check the exchange rate is configured." }),
+        { status: 200 }
+      );
+    }
+
+    const amountKes = kesAmount as number;
+
     const env = Deno.env.get("MPESA_ENV") ?? "sandbox";
-    const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY")!;
-    const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET")!;
-    const shortcode = Deno.env.get("MPESA_SHORTCODE")!;
-    const passkey = Deno.env.get("MPESA_PASSKEY")!;
-    const callbackUrl = Deno.env.get("MPESA_CALLBACK_URL")!;
-    const callbackSecret = Deno.env.get("MPESA_CALLBACK_SECRET")!;
+    const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY") ?? "";
+    const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET") ?? "";
+    const shortcode = Deno.env.get("MPESA_SHORTCODE") ?? "";
+    const passkey = Deno.env.get("MPESA_PASSKEY") ?? "";
+    const callbackUrl = Deno.env.get("MPESA_CALLBACK_URL") ?? "";
+    const callbackSecret = Deno.env.get("MPESA_CALLBACK_SECRET") ?? "";
+
+    // PREFLIGHT.
+    //
+    // These were previously read with a trailing `!`, which is a
+    // TypeScript assertion and does nothing at runtime: a missing secret
+    // came through as undefined and the request failed several calls
+    // later with an opaque message. Checking here turns "edge function
+    // returned a non-2xx status" into a sentence naming the problem.
+    const configProblems: string[] = [];
+
+    if (!consumerKey) configProblems.push("MPESA_CONSUMER_KEY is not set");
+    if (!consumerSecret) configProblems.push("MPESA_CONSUMER_SECRET is not set");
+    if (!shortcode) configProblems.push("MPESA_SHORTCODE is not set");
+    if (!callbackUrl) configProblems.push("MPESA_CALLBACK_URL is not set");
+    if (!callbackSecret) configProblems.push("MPESA_CALLBACK_SECRET is not set");
+
+    if (!passkey) {
+      configProblems.push("MPESA_PASSKEY is not set");
+    } else if (!/^[0-9a-fA-F]{64}$/.test(passkey)) {
+      // The commonest setup mistake by a distance. Daraja's simulator page
+      // shows both a Passkey and a generated Password, and the Password is
+      // what gets copied. The Password is base64 of
+      // shortcode + passkey + timestamp, is only valid for that timestamp,
+      // and will never authenticate. A real passkey is 64 hex characters.
+      configProblems.push(
+        passkey.includes("=") || passkey.length > 70
+          ? "MPESA_PASSKEY looks like a generated Password, not a Passkey. On Daraja's simulator page the Password field is base64 and changes every minute; you need the Passkey field, which is 64 hexadecimal characters and does not change. For sandbox the passkey is the same for everyone and is shown on the M-Pesa Express simulator page."
+          : `MPESA_PASSKEY should be 64 hexadecimal characters but is ${passkey.length}. Check you copied the Passkey and not something else.`
+      );
+    }
+
+    if (shortcode && !/^\d{5,7}$/.test(shortcode)) {
+      configProblems.push(`MPESA_SHORTCODE should be 5 to 7 digits but is "${shortcode}"`);
+    }
+
+    if (env === "sandbox" && shortcode && shortcode !== "174379") {
+      configProblems.push(
+        `You are in sandbox but MPESA_SHORTCODE is ${shortcode}. Sandbox only accepts 174379; your own till or paybill number will not work until MPESA_ENV is "production".`
+      );
+    }
+
+    if (env === "sandbox" && (Deno.env.get("MPESA_SHORTCODE_TYPE") ?? "paybill").toLowerCase() !== "paybill") {
+      configProblems.push(
+        'Sandbox only supports paybill. Set MPESA_SHORTCODE_TYPE to "paybill" for testing, and switch it to "till" only when you go to production with a real till.'
+      );
+    }
+
+    if (callbackUrl && !callbackUrl.startsWith("https://")) {
+      configProblems.push(
+        "MPESA_CALLBACK_URL must be a public https URL. Safaricom calls it from their servers, so localhost and http will never be reached."
+      );
+    }
+
+    if (configProblems.length > 0) {
+      console.error("M-Pesa config problems:", configProblems);
+      return new Response(
+        JSON.stringify({
+          error: "M-Pesa is not configured correctly. " + configProblems[0],
+          configProblems,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const accessToken = await getAccessToken(env, consumerKey, consumerSecret);
     const timestamp = timestampNow();
@@ -130,7 +235,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: stkData.errorMessage ?? "STK push was not accepted by Safaricom" }), { status: 200 });
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const { data: payment, error } = await supabase
       .from("payments")
       .insert({

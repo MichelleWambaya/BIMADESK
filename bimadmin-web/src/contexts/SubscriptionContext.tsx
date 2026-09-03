@@ -29,6 +29,9 @@ interface SubscriptionContextValue {
   /** True on any paid plan. Drives the crown, since Free and Starter
    *  share the bronze ring and only the crown separates them. */
   isPaidPlan: boolean;
+  /** False until the plan has loaded. Use it to hold back tier visuals
+   *  rather than rendering a wrong badge and correcting it. */
+  planResolved: boolean;
   isAdmin: boolean;
   /** True while an admin is viewing the app as another plan. */
   isPreviewing: boolean;
@@ -131,7 +134,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const isPreviewing = !!previewPlan;
   const effectivePlan = previewPlan ?? currentPlan;
   const badgeTier = (effectivePlan?.badgeTier as BadgeTier) ?? "bronze";
-  const isPaidPlan = (effectivePlan?.priceKesMonthly ?? 0) > 0;
+  // Gated on the plan actually being resolved. Before this, effectivePlan
+  // was null during load, so isPaidPlan read false and a paid customer
+  // saw a bronze ring with no crown flick to silver with one on every
+  // page load.
+  const isPaidPlan = !!effectivePlan && effectivePlan.priceUsdCents > 0;
+  const planResolved = !!effectivePlan;
 
   // A preview that ignores the previewed plan's limits tells you nothing.
   // So admins bypass limits only when NOT previewing; the moment they
@@ -161,6 +169,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         effectivePlan,
         badgeTier,
         isPaidPlan,
+        planResolved,
         isAdmin,
         isPreviewing,
         adminPreviewPlanKey,

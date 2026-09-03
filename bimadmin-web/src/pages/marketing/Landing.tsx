@@ -90,7 +90,7 @@ export function LandingPage() {
     <div className="bg-paper">
       <header className="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-tab bg-violet-500 flex items-center justify-center text-white font-display text-[14px]">B</div>
+          <div className="w-8 h-8  bg-blue-800 flex items-center justify-center text-white font-display text-[14px]">B<span style={{ color: '#C68A2E' }}>A</span></div>
           <span className="font-display text-[15px]">BimAdmin</span>
         </div>
         <div className="flex items-center gap-3">
@@ -254,6 +254,7 @@ export function LandingPage() {
             ))}
             <Link to="/faq" className="hover:text-ink">FAQ</Link>
             <Link to="/privacy" className="hover:text-ink">Privacy</Link>
+            <Link to="/refunds" className="hover:text-ink">Refunds</Link>
             <Link to="/terms" className="hover:text-ink">Terms</Link>
           </div>
         </div>

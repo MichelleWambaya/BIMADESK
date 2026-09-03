@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
-import { OAuthButtons } from "@/components/auth/OAuthButtons";
+import { Logo } from "@/components/shared/Logo";
 
 export function SignUpPage() {
   const { signUp } = useAuth();
@@ -40,8 +40,8 @@ export function SignUpPage() {
     <div className="min-h-screen wb-aurora-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="inline-flex w-11 h-11 rounded-glass bg-white/15 border border-white/25 items-center justify-center mb-3">
-            <span className="font-display text-white text-lg">B</span>
+          <div className="inline-flex mb-3">
+            <Logo size={44} />
           </div>
           <h1 className="font-display text-white text-xl">Create your BimAdmin account</h1>
           <p className="text-white/70 text-[13px] mt-1">Set up your book of business in a couple of minutes.</p>
@@ -57,7 +57,6 @@ export function SignUpPage() {
           </div>
         ) : (
           <div className="wb-glass-dark p-6 space-y-4">
-            <OAuthButtons mode="signup" />
             <form onSubmit={submit} className="space-y-3.5">
             <div>
               <label className="block text-[12px] font-medium text-white/80 mb-1">Email</label>

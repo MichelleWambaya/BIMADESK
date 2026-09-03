@@ -11,7 +11,7 @@
 
 export type ID = string;
 
-export type ClientType = "individual" | "company";
+export type ClientType = "individual" | "family" | "sole_proprietor" | "company" | "group";
 
 export type PreferredContactMethod = "call" | "whatsapp" | "sms" | "email";
 
@@ -65,6 +65,10 @@ export interface SubscriptionPlan {
   key: PlanKey;
   name: string;
   priceKesMonthly: number;
+  priceUsdCents: number;
+  /** Shilling amount for the current rate. Server computed; never derive
+   *  this client side, the charge must match what the server quotes. */
+  priceKes?: number;
   maxClients: number | null;
   maxPolicies: number | null;
   maxTeamMembers: number | null;
@@ -139,6 +143,10 @@ export interface Client {
   firstName?: string;
   lastName?: string;
   companyName?: string;
+  registrationNumber?: string;
+  kraPin?: string;
+  contactPersonName?: string;
+  contactPersonRole?: string;
   phone: string;
   altPhone?: string;
   email?: string;
@@ -154,8 +162,13 @@ export interface Client {
 }
 
 export function clientDisplayName(c: Client): string {
-  if (c.clientType === "company") return c.companyName || "Unnamed company";
-  return [c.firstName, c.lastName].filter(Boolean).join(" ") || "Unnamed client";
+  // Entities are named by their entity name; a sole proprietor is a person
+  // who may also carry a business name, so prefer the person and fall back.
+  if (c.clientType === "company" || c.clientType === "group") {
+    return c.companyName || "Unnamed organisation";
+  }
+  const personName = [c.firstName, c.lastName].filter(Boolean).join(" ");
+  return personName || c.companyName || "Unnamed client";
 }
 
 export function clientInitial(c: Client): string {
@@ -214,9 +227,11 @@ export interface Policy {
   startDate: string;
   endDate: string;
   premiumKes: number;
+  commissionBp?: number;
+  commissionAmountKes?: number;
+  commissionStatus?: "pending" | "invoiced" | "received" | "written_off";
   paymentFrequency: PaymentFrequency;
   status: PolicyStatus;
-  commissionPct?: number;
   notes?: string;
   customFields: CustomFieldValue[];
   createdAt: string;

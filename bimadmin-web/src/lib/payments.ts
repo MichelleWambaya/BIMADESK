@@ -1,13 +1,16 @@
 import { supabase } from "./supabaseClient";
 
-export async function startMpesaPayment(input: { organizationId: string; planId: string; phone: string; amountKes: number }) {
+// amountKes is intentionally absent. The server derives the charge from
+// the plan and the current rate; accepting it here let a caller name their
+// own price.
+export async function startMpesaPayment(input: { organizationId: string; planId: string; phone: string }) {
   const { data, error } = await supabase.functions.invoke("mpesa-stk-push", { body: input });
   if (error) return { error: error.message, paymentId: null as string | null };
   if (data?.error) return { error: data.error as string, paymentId: null as string | null };
   return { error: null, paymentId: data.paymentId as string };
 }
 
-export async function startPaystackPayment(input: { organizationId: string; planId: string; email: string; amountKes: number }) {
+export async function startPaystackPayment(input: { organizationId: string; planId: string; email: string }) {
   const { data, error } = await supabase.functions.invoke("paystack-initialize", { body: input });
   if (error) return { error: error.message, authorizationUrl: null as string | null };
   if (data?.error) return { error: data.error as string, authorizationUrl: null as string | null };

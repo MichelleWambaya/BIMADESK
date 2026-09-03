@@ -16,6 +16,7 @@ import { DocumentsPanel } from "./DocumentsPanel";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PolicyMembersPanel } from "@/components/policies/PolicyMembersPanel";
 import { formatDate, formatDateTime, formatRelativeDay } from "@/lib/date";
+import { memberSectionLabel, hasMemberSchedule, clientTypeLabel } from "@/lib/clientTypes";
 
 type Tab = "overview" | "policies" | "quotations" | "communications" | "tasks" | "documents" | "activity";
 
@@ -219,7 +220,7 @@ export function ClientProfile() {
                         }`}
                       >
                         <Users size={12} />
-                        {client.clientType === "company" ? "Members" : "Family"}
+                        {memberSectionLabel(client.clientType)}
                       </button>
                       <StatusBadge status={p.status} kind="policy" />
                     </div>
@@ -227,7 +228,7 @@ export function ClientProfile() {
                       <div className="px-4 pb-4 pt-1 bg-paper-sunk/30">
                         <PolicyMembersPanel
                           policyId={p.id}
-                          clientType={client.clientType === "company" ? "company" : "individual"}
+                          clientType={client.clientType}
                           clientName={clientDisplayName(client)}
                         />
                       </div>

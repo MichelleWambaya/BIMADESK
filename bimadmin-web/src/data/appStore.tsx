@@ -39,6 +39,15 @@ interface NewClientInput {
   phone: string;
   email?: string;
   preferredContactMethod?: PreferredContactMethod;
+  // Optional detail, mostly arriving from an import. Anything absent is
+  // simply not written, so a hand-created client is unaffected.
+  altPhone?: string;
+  city?: string;
+  nationalId?: string;
+  kraPin?: string;
+  registrationNumber?: string;
+  contactPersonName?: string;
+  notes?: string;
 }
 
 interface NewPolicyInput {
@@ -229,6 +238,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             phone: input.phone,
             email: input.email,
             preferred_contact_method: input.preferredContactMethod ?? "call",
+            alt_phone: input.altPhone || null,
+            city: input.city || null,
+            national_id: input.nationalId || null,
+            kra_pin: input.kraPin || null,
+            registration_number: input.registrationNumber || null,
+            contact_person_name: input.contactPersonName || null,
+            notes: input.notes || null,
             tags: [],
           })
           .select()

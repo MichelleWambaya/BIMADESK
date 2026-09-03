@@ -3,6 +3,7 @@ import { useApp } from "@/data/appStore";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ClientType, PreferredContactMethod, clientDisplayName } from "@/types";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { CLIENT_TYPES, isEntityClient } from "@/lib/clientTypes";
 
 export function ClientForm({ onDone }: { onDone: (clientId: string) => void }) {
   const store = useApp();
@@ -33,20 +34,20 @@ export function ClientForm({ onDone }: { onDone: (clientId: string) => void }) {
       setError("Phone number is required.");
       return;
     }
-    if (clientType === "individual" && !firstName.trim()) {
+    if (!isEntityClient(clientType) && !firstName.trim()) {
       setError("First name is required.");
       return;
     }
-    if (clientType === "company" && !companyName.trim()) {
+    if (isEntityClient(clientType) && !companyName.trim()) {
       setError("Company name is required.");
       return;
     }
     store
       .addClient({
         clientType,
-        firstName: clientType === "individual" ? firstName : undefined,
-        lastName: clientType === "individual" ? lastName : undefined,
-        companyName: clientType === "company" ? companyName : undefined,
+        firstName: !isEntityClient(clientType) ? firstName : undefined,
+        lastName: !isEntityClient(clientType) ? lastName : undefined,
+        companyName: isEntityClient(clientType) ? companyName : undefined,
         phone,
         email: email || undefined,
         preferredContactMethod: preferred,
@@ -59,22 +60,39 @@ export function ClientForm({ onDone }: { onDone: (clientId: string) => void }) {
 
   return (
     <form onSubmit={submit} className="space-y-3.5">
-      <div className="flex gap-2">
-        {(["individual", "company"] as ClientType[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setClientType(t)}
-            className={`flex-1 text-[13px] py-1.5 rounded-[8px] border transition-colors ${
-              clientType === t ? "bg-violet-500 text-white border-violet-500" : "border-line text-ink-soft hover:bg-paper-sunk"
-            }`}
-          >
-            {t === "individual" ? "Individual" : "Company"}
-          </button>
-        ))}
+      <div>
+        <label className="wb-label">Client type</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {CLIENT_TYPES.map((ct) => {
+            const active = clientType === ct.key;
+            return (
+              <button
+                key={ct.key}
+                type="button"
+                onClick={() => setClientType(ct.key)}
+                className={`flex items-start gap-2 text-left px-2.5 py-2 rounded-[10px] border transition-colors ${
+                  active
+                    ? "bg-violet-50 border-violet-500"
+                    : "border-line hover:bg-paper-sunk"
+                }`}
+              >
+                <ct.icon
+                  size={15}
+                  className={`mt-0.5 shrink-0 ${active ? "text-violet-700" : "text-ink-faint"}`}
+                />
+                <span className="min-w-0">
+                  <span className={`block text-[12.5px] font-medium ${active ? "text-violet-700" : ""}`}>
+                    {ct.label}
+                  </span>
+                  <span className="block text-[10.5px] text-ink-faint leading-snug">{ct.description}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {clientType === "individual" ? (
+      {!isEntityClient(clientType) ? (
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="wb-label">First name</label>

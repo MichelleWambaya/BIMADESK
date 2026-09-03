@@ -29,7 +29,10 @@ export function ReportsPage() {
     const expired = store.policies.filter((p) => p.status === "expired").length;
     const renewalRate = renewed + expired > 0 ? Math.round((renewed / (renewed + expired)) * 100) : 0;
     const premiumVolume = activePolicies.reduce((sum, p) => sum + p.premiumKes, 0);
-    const commission = activePolicies.reduce((sum, p) => sum + p.premiumKes * ((p.commissionPct ?? 0) / 100), 0);
+    // Uses the stored commission amount rather than recomputing from a
+    // rate. It was reading commissionPct, which nothing ever wrote, so
+    // this figure was always zero.
+    const commission = activePolicies.reduce((sum, p) => sum + (p.commissionAmountKes ?? 0), 0);
     const openQuotations = store.quotations.filter((q) => !["accepted", "declined", "expired", "lost"].includes(q.status)).length;
 
     return [
