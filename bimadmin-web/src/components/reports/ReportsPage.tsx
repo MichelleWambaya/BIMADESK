@@ -32,7 +32,7 @@ export function ReportsPage() {
     // Uses the stored commission amount rather than recomputing from a
     // rate. It was reading commissionPct, which nothing ever wrote, so
     // this figure was always zero.
-    const commission = activePolicies.reduce((sum, p) => sum + (p.commissionAmountKes ?? 0), 0);
+    // const commission = activePolicies.reduce((sum, p) => sum + (p.commissionAmountKes ?? 0), 0);
     const openQuotations = store.quotations.filter((q) => !["accepted", "declined", "expired", "lost"].includes(q.status)).length;
 
     return [
@@ -41,7 +41,7 @@ export function ReportsPage() {
       { label: "Expiring within 30 days", value: expiringSoon.length },
       { label: "Renewal rate", value: `${renewalRate}%` },
       { label: "Premium volume (active book)", value: `KES ${premiumVolume.toLocaleString()}` },
-      { label: "Estimated commission", value: `KES ${Math.round(commission).toLocaleString()}` },
+      // { label: "Estimated commission", value: `KES ${Math.round(commission).toLocaleString()}` },
       { label: "Open quotations", value: openQuotations },
     ];
   }, [store.clients, store.policies, store.quotations]);
