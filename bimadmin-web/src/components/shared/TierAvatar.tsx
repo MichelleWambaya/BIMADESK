@@ -77,11 +77,17 @@ export function TierAvatar({
           height: size,
           background: t.ring,
           boxShadow: t.glow,
+          boxShadow: t.glow,
+          
         }}
       >
         {avatarUrl ? (
           <img
-            src={avatarUrl}
+            src={avata<<<<<<< HEAD
+=======
+          
+>>>>>>> 88d0bd5839023e0002063e02cd985d91d3f3f761
+rUrl}
             alt=""
             className="rounded-full object-cover"
             style={{ width: inner, height: inner }}
