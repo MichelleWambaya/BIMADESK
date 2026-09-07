@@ -1,12 +1,13 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { LayoutGrid, Users, CreditCard, ArrowLeft, Star, Eye } from "lucide-react";
+import { LayoutGrid, Users, CreditCard, ArrowLeft, Star, Eye, Inbox } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutGrid, end: true },
   { to: "/admin/organizations", label: "Organizations", icon: Users },
-  { to: "/admin/payments", label: "Payments", icon: CreditCard },
+  { to: "/admin/approve-payments", label: "Approve payments", icon: Inbox },
+  { to: "/admin/payments", label: "Payment history", icon: CreditCard },
   { to: "/admin/ratings", label: "Ratings", icon: Star },
   { to: "/admin/plan-tester", label: "Plan tester", icon: Eye },
 ];
