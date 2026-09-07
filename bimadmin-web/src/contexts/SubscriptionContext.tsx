@@ -79,11 +79,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const loadPlans = useCallback(async () => {
-    const { data } = await supabase
-      .from("subscription_plans")
-      .select("*")
-      .eq("is_active", true)
-      .order("sort_order");
+    const { data } = await supabase.rpc("public_plans");
     if (data) setPlans(data.map(mapPlan));
   }, []);
 

@@ -60,9 +60,11 @@ export function AdminOrganizations() {
   async function changePlan(orgId: string, planId: string) {
     const { data: existing } = await supabase.from("subscriptions").select("id").eq("organization_id", orgId).maybeSingle();
     if (existing) {
-      await supabase.from("subscriptions").update({ plan_id: planId, status: "active" }).eq("id", existing.id);
+      const end = new Date();
+      end.setMonth(end.getMonth() + 1);
+      await supabase.from("subscriptions").update({ plan_id: planId, status: "active", current_period_start: new Date().toISOString(), current_period_end: end.toISOString(), trial_ends_at: null, read_only_since: null,}).eq("id", existing.id);
     } else {
-      await supabase.from("subscriptions").insert({ organization_id: orgId, plan_id: planId, status: "active" });
+      await supabase.from("subscriptions").insert({ plan_id: planId, organization_id: orgId, status: "active", current_period_start: new Date().toISOString(), current_period_end: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(), trial_ends_at: null, read_only_since: null,});
     }
     load();
   }

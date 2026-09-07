@@ -24,6 +24,7 @@ interface Instructions {
  * checked before submission, and the database refuses a code that has
  * been used before.
  */
+
 export function PaymentPanel({
   organizationId,
   plan,
@@ -31,6 +32,7 @@ export function PaymentPanel({
 }: {
   organizationId: string;
   plan: SubscriptionPlan;
+  billingEmail?: string | null;
   onPaid: () => void;
 }) {
   const [instructions, setInstructions] = useState<Instructions | null>(null);
@@ -101,13 +103,19 @@ export function PaymentPanel({
           <Clock size={18} className="text-emerald-600" />
         </div>
         <p className="text-[15px] font-semibold">Payment submitted</p>
-        <p className="text-[13px] text-ink-soft mt-1.5 max-w-sm mx-auto">
+        <p className="text-[12px] text-ink-faint mt-3">
+          Reference {cleanCode}
+        </p>
+        <p className="text-[11.5px] text-ink-faint mt-2">
+          If your plan doesn't update once it's approved, refresh the page.
+        </p>
+        {/* <p className="text-[13px] text-ink-soft mt-1.5 max-w-sm mx-auto">
           We are checking it against our records. Your plan is usually activated within a few hours on a working
           day, and you will get an email once it is done.
         </p>
         <p className="text-[12px] text-ink-faint mt-3">
           Reference {cleanCode}
-        </p>
+        </p> */}
       </div>
     );
   }
