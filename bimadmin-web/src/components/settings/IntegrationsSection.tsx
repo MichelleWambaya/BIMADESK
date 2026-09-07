@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Mail, MessageSquare, Calendar, Cloud, Link2, CreditCard, Smartphone } from "lucide-react";
+import { Mail, MessageSquare, Calendar, Cloud, Link2, Smartphone } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 interface Status {
   email: boolean;
   sms: boolean;
   whatsapp: boolean;
-  mpesa: boolean;
-  paystack: boolean;
 }
 
 const REAL_ROWS: { key: keyof Status; icon: any; label: string; desc: string }[] = [
   { key: "email", icon: Mail, label: "Email", desc: "Send real email from your own mailbox" },
   { key: "whatsapp", icon: MessageSquare, label: "WhatsApp Business API", desc: "Send real WhatsApp messages" },
   { key: "sms", icon: Smartphone, label: "SMS gateway", desc: "Send real SMS via Africa's Talking" },
-  { key: "mpesa", icon: CreditCard, label: "M-Pesa", desc: "Accept subscription payments via STK push" },
-  { key: "paystack", icon: CreditCard, label: "Card payments", desc: "Accept subscription payments via Paystack" },
 ];
 
 const NOT_BUILT_ROWS = [
