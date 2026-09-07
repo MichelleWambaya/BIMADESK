@@ -44,6 +44,7 @@ import { AdminOrganizations } from "@/pages/admin/AdminOrganizations";
 import { AdminPayments } from "@/pages/admin/AdminPayments";
 import { AdminRatings } from "@/pages/admin/AdminRatings";
 import { AdminPlanTester } from "@/pages/admin/AdminPlanTester";
+import { AdminManualPayments } from "@/pages/admin/AdminManualPayments";
 
 export default function App() {
   return (
@@ -106,6 +107,7 @@ export default function App() {
                       <Route path="payments" element={<AdminPayments />} />
                       <Route path="ratings" element={<AdminRatings />} />
                       <Route path="plan-tester" element={<AdminPlanTester />} />
+                      <Route path="approve-payments" element={<AdminManualPayments />} />
                     </Route>
                   </Route>
 
