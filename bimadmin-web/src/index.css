@@ -183,7 +183,7 @@
    it; interior pages stay flat. */
 .wb-hero-image {
   background-color: #0b1516;
-  background-image: url("/img/hero-glyphs.jpg");
+  background-image: url("/public/hero-glyphs.jpg");
   background-size: cover;
   background-position: 30% 20%;
   background-repeat: no-repeat;
