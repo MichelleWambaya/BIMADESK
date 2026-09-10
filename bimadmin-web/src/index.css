@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,29 +10,25 @@
    gets dark mode for free, with no per-component changes needed.
    See src/contexts/ThemeContext.tsx for how [data-theme] gets set.
 --------------------------------------------------------------------------- */
-
 :root {
-  --color-paper: 245 242 252;
-  --color-paper-raised: 255 255 255;
-  --color-paper-sunk: 236 230 249;
-  --color-ink: 23 19 31;
-  --color-ink-soft: 85 80 107;
-  --color-ink-faint: 141 135 168;
-  --color-line: 226 218 244;
-
-  /* Accessibility font scale, multiplied into html font-size below.
-     Set by src/contexts/AccessibilityContext.tsx. */
+  --color-paper: 253 247 240;
+  --color-paper-raised: 255 253 250;
+  --color-paper-sunk: 250 237 222;
+  --color-ink: 41 30 22;
+  --color-ink-soft: 120 98 80;
+  --color-ink-faint: 173 151 130;
+  --color-line: 240 222 200;
   --a11y-scale: 1;
 }
 
 [data-theme="dark"] {
-  --color-paper: 13 10 22;
-  --color-paper-raised: 22 18 33;
-  --color-paper-sunk: 31 26 45;
-  --color-ink: 240 238 247;
-  --color-ink-soft: 191 187 209;
-  --color-ink-faint: 135 129 158;
-  --color-line: 54 49 71;
+  --color-paper: 26 20 16;
+  --color-paper-raised: 38 30 24;
+  --color-paper-sunk: 47 37 29;
+  --color-ink: 245 238 230;
+  --color-ink-soft: 214 196 176;
+  --color-ink-faint: 168 146 126;
+  --color-line: 74 58 44;
 }
 
 @layer base {
@@ -54,10 +51,11 @@
     @apply font-display text-ink;
   }
   :focus-visible {
-    outline: 2px solid theme("colors.violet.500");
-    outline-offset: 2px;
-    border-radius: 4px;
+  outline: 2px solid theme("colors.amber.500");
+  outline-offset: 2px;
+  border-radius: 4px;
   }
+   
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -83,31 +81,31 @@
   }
   .wb-btn-primary {
     @apply inline-flex items-center justify-center gap-2 bg-violet-500 text-white text-[13px] font-medium
-      px-3.5 py-2 rounded-[10px] hover:bg-violet-600 transition-colors
+      px-3.5 py-2 rounded-[6px] hover:bg-violet-600 transition-colors
       disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98];
   }
   .wb-btn-accent {
     @apply inline-flex items-center justify-center gap-2 bg-amber-500 text-white text-[13px] font-medium
-      px-3.5 py-2 rounded-[10px] hover:bg-amber-600 transition-colors
+      px-3.5 py-2 rounded-[6px] hover:bg-amber-600 transition-colors
       disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98];
   }
   .wb-btn-secondary {
     @apply inline-flex items-center justify-center gap-2 bg-transparent border border-line text-ink text-[13px]
-      font-medium px-3.5 py-2 rounded-[10px] hover:bg-paper-sunk transition-colors active:scale-[0.98];
+      font-medium px-3.5 py-2 rounded-[6px] hover:bg-paper-sunk transition-colors active:scale-[0.98];
   }
   .wb-btn-ghost {
     @apply inline-flex items-center justify-center gap-1.5 text-ink-soft text-[13px] font-medium
       min-h-[36px] px-2.5 py-1.5 rounded-[8px] hover:bg-paper-sunk hover:text-ink transition-colors;
   }
   .wb-input {
-    @apply w-full bg-paper-raised border border-line rounded-[10px] px-3 py-2 text-[13px]
+    @apply w-full bg-paper-raised border border-line rounded-[6px] px-3 py-2 text-[13px]
       text-ink placeholder:text-ink-faint focus:border-violet-300 focus:ring-2 focus:ring-violet-100 transition-colors;
   }
   .wb-label {
     @apply block text-[12px] font-medium text-ink-soft mb-1;
   }
   .wb-select {
-    @apply w-full bg-paper-raised border border-line rounded-[10px] px-3 py-2 text-[13px] text-ink;
+    @apply w-full bg-paper-raised border border-line rounded-[6px] px-3 py-2 text-[13px] text-ink;
   }
 
   /* GPU-friendly aurora background. Animating `background-position` on a
@@ -129,15 +127,16 @@
   /* One dominant light source plus a smaller warm accent. Two lights read
      as intentional; three or more turn to grey where they overlap. */
   .wb-aurora-bg::before {
-    content: "";
-    position: absolute;
-    inset: -30%;
-    background:
-      radial-gradient(ellipse 60% 50% at 22% 18%, rgba(124, 77, 255, 0.42), transparent 62%),
-      radial-gradient(ellipse 45% 40% at 82% 30%, rgba(255, 138, 30, 0.16), transparent 60%);
-    animation: wb-aurora-drift 26s ease-in-out infinite;
-    will-change: transform;
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(ellipse 60% 50% at 22% 18%, rgba(255, 154, 90, 0.42), transparent 62%),
+    radial-gradient(ellipse 45% 40% at 82% 30%, rgba(255, 200, 120, 0.18), transparent 60%);
+  animation: wb-aurora-drift 26s ease-in-out infinite;
+  will-change: transform;
   }
+   
   /* Vignette, so text sits on the darkest part of the panel and stays
      readable no matter where the drifting glow happens to be. */
   .wb-aurora-bg::after {
