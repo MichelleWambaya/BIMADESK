@@ -7,6 +7,7 @@ import { QuickAddMenu } from "./QuickAddMenu";
 import { TierAvatar } from "@/components/shared/TierAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { FEATURES } from "@/lib/featureFlags";
 
 export function TopBar() {
   const { profile, organization, signOut } = useAuth();
@@ -40,13 +41,15 @@ export function TopBar() {
 
       <QuickAddMenu />
 
-      <Link
-        to="/app/communications"
-        className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-ink-soft hover:bg-paper-sunk hover:text-ink transition-colors"
-        title="Communications"
-      >
-        <Mail size={16} />
-      </Link>
+      {FEATURES.messaging && (
+        <Link
+          to="/app/communications"
+          className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-ink-soft hover:bg-paper-sunk hover:text-ink transition-colors"
+          title="Communications"
+        >
+          <Mail size={16} />
+        </Link>
+      )}
 
       <NotificationBell />
 

@@ -38,6 +38,7 @@ export interface Organization {
   mpesaPhone?: string;
   themeColor: string;
   renewalReminderOffsets: number[];
+  activitiesHiddenBefore?: string;
   createdAt: string;
 }
 
@@ -69,6 +70,8 @@ export interface SubscriptionPlan {
   /** Shilling amount for the current rate. Server computed; never derive
    *  this client side, the charge must match what the server quotes. */
   priceKes?: number;
+  priceUsdCentsYearly: number;
+  priceKesYearly?: number;
   maxClients: number | null;
   maxPolicies: number | null;
   maxTeamMembers: number | null;
@@ -77,6 +80,7 @@ export interface SubscriptionPlan {
   bulkImportEnabled: boolean;
   trialDays: number;
   badgeTier: "bronze" | "silver" | "gold";
+  features: string[];
   tagline?: string;
   description?: string;
 }

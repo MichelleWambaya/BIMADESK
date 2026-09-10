@@ -5,8 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Modal } from "@/components/shared/Modal";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 
-const AVATAR_COLORS = ["violet", "amber", "emerald", "coral"];
-const COLOR_HEX: Record<string, string> = { violet: "#6D3CE5", amber: "#FF8A1E", emerald: "#12B76A", coral: "#FF5A3C" };
+const AVATAR_COLORS = ["violet", "amber", "emerald", "coral", "black"];
+const COLOR_HEX: Record<string, string> = { violet: "#6D3CE5", amber: "#FF8A1E", emerald: "#12B76A", coral: "#FF5A3C", black: "#1A1A1A" };
 
 export function AccountSection() {
   const { session, profile, organization, updateProfile, updateOrganization, uploadAvatar, removeAvatar, signOut, deleteAccount } = useAuth();
@@ -134,8 +134,8 @@ export function AccountSection() {
                 key={c}
                 type="button"
                 onClick={() => setAvatarColor(c)}
-                className="w-8 h-8 rounded-full flex items-center justify-center border-2"
-                style={{ backgroundColor: COLOR_HEX[c], borderColor: avatarColor === c ? "rgb(var(--color-ink))" : "transparent" }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${avatarColor === c ? "ring-2 ring-offset-2 ring-ink ring-offset-paper-raised" : ""}`}
+                style={{ backgroundColor: COLOR_HEX[c] }}
                 aria-label={c}
               />
             ))}

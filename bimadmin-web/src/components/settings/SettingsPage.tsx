@@ -17,13 +17,14 @@ import { IntegrationsSection } from "./IntegrationsSection";
 import { UserGuideSection } from "./UserGuideSection";
 import { TemplatesSection } from "./TemplatesSection";
 import { MessagingSection } from "./MessagingSection";
+import { FEATURES } from "@/lib/featureFlags";
 
 type Section = "account" | "team" | "appearance" | "products" | "automations" | "templates" | "reminders" | "messaging" | "integrations" | "data" | "guide";
 
 const SECTIONS: { key: Section; label: string }[] = [
   { key: "account", label: "Account" },
   { key: "team", label: "Team" },
-  { key: "messaging", label: "Messaging and SMS" },
+  ...(FEATURES.messaging ? [{ key: "messaging" as const, label: "Messaging and SMS" }] : []),
   { key: "appearance", label: "Appearance" },
   { key: "products", label: "Insurance products" },
   { key: "automations", label: "Automations" },

@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { PolicyMembersPanel } from "@/components/policies/PolicyMembersPanel";
 import { formatDate, formatDateTime, formatRelativeDay } from "@/lib/date";
 import { memberSectionLabel, hasMemberSchedule, clientTypeLabel } from "@/lib/clientTypes";
+import { FEATURES } from "@/lib/featureFlags";
 
 type Tab = "overview" | "policies" | "quotations" | "communications" | "tasks" | "documents" | "activity";
 
@@ -74,7 +75,9 @@ export function ClientProfile() {
           </div>
           <div className="flex gap-1.5 flex-wrap" data-tour="client-actions">
             <button className="wb-btn-secondary" onClick={() => open("log_call", client.id)}><Phone size={14} /> Call</button>
-            <button className="wb-btn-secondary" onClick={() => open("log_message", client.id)}><MessageSquare size={14} /> Message</button>
+            {FEATURES.messaging && (
+              <button className="wb-btn-secondary" onClick={() => open("log_message", client.id)}><MessageSquare size={14} /> Message</button>
+            )}
             <button className="wb-btn-secondary" onClick={() => open("log_email", client.id)}><Mail size={14} /> Email</button>
             <button className="wb-btn-secondary" onClick={() => open("add_note", client.id)}><StickyNote size={14} /> Note</button>
             <button className="wb-btn-ghost !text-coral-500 hover:!bg-coral-50" onClick={() => setDeleting(true)} aria-label="Delete client">
@@ -269,7 +272,9 @@ export function ClientProfile() {
         <div className="wb-card">
           <div className="flex justify-end gap-1.5 p-3 border-b border-line">
             <button className="wb-btn-secondary" onClick={() => open("log_call", client.id)}><Phone size={14} /> Call</button>
-            <button className="wb-btn-secondary" onClick={() => open("log_message", client.id)}><MessageSquare size={14} /> Message</button>
+            {FEATURES.messaging && (
+              <button className="wb-btn-secondary" onClick={() => open("log_message", client.id)}><MessageSquare size={14} /> Message</button>
+            )}
             <button className="wb-btn-secondary" onClick={() => open("log_email", client.id)}><Mail size={14} /> Email</button>
           </div>
           {comms.length === 0 ? (

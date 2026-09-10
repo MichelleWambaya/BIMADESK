@@ -38,6 +38,7 @@ const AVATAR_COLOR: Record<string, string> = {
   amber: "#FF8A1E",
   emerald: "#12B76A",
   coral: "#FF5A3C",
+  black: "#1A1A1A",
 };
 
 interface Props {

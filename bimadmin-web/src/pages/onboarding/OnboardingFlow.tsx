@@ -7,8 +7,8 @@ import { PaymentPanel } from "@/components/subscription/PaymentPanel";
 
 type Step = "welcome" | "profile" | "plan" | "payment" | "done";
 
-const AVATAR_COLORS = ["violet", "amber", "emerald", "coral"];
-const COLOR_HEX: Record<string, string> = { violet: "#6D3CE5", amber: "#FF8A1E", emerald: "#12B76A", coral: "#FF5A3C" };
+const AVATAR_COLORS = ["violet", "amber", "emerald", "coral", "black"];
+const COLOR_HEX: Record<string, string> = { violet: "#6D3CE5", amber: "#FF8A1E", emerald: "#12B76A", coral: "#FF5A3C", black: "#1A1A1A" };
 const PENDING_INVITE_KEY = "bimadesk_pending_invite";
 
 export function OnboardingFlow() {
@@ -23,6 +23,7 @@ export function OnboardingFlow() {
   const [phone, setPhone] = useState("");
   const [avatarColor, setAvatarColor] = useState("violet");
   const [selectedPlanKey, setSelectedPlanKey] = useState<string>("free");
+  const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -191,7 +192,7 @@ export function OnboardingFlow() {
               <h2 className="font-semibold text-ink text-lg">Pay for {selectedPlan.name}</h2>
               <p className="text-ink-soft text-[12.5px] mt-1">${(selectedPlan.priceUsdCents / 100).toFixed(0)} per month{selectedPlan.priceKes ? `, charged as about KES ${selectedPlan.priceKes.toLocaleString()}` : ""}.</p>
             </div>
-            <PaymentPanel organizationId={profile.organizationId} plan={selectedPlan} onPaid={onPaymentSuccess} />
+            <PaymentPanel organizationId={profile.organizationId} plan={selectedPlan} period={period} onPaid={onPaymentSuccess} />
             <button className="text-[12.5px] text-ink-faint underline" onClick={() => setStep("plan")}>Choose a different plan</button>
           </div>
         )}

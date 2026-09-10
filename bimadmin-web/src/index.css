@@ -176,3 +176,23 @@
   animation-duration: 0.001ms !important;
   transition-duration: 0.001ms !important;
 }
+/* Landing hero ground. The photograph is fixed to cover, positioned
+   toward the upper-left where the ochre marks are densest, with a dark
+   scrim applied by the component so text stays readable regardless of
+   where the marks fall. Only the hero and the closing call to action use
+   it; interior pages stay flat. */
+.wb-hero-image {
+  background-color: #0b1516;
+  background-image: url("/img/hero-glyphs.jpg");
+  background-size: cover;
+  background-position: 30% 20%;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 640px) {
+  /* Tighter crop on phones so at least a few marks stay visible behind
+     the headline rather than a mostly-black band. */
+  .wb-hero-image {
+    background-position: 40% 30%;
+  }
+}

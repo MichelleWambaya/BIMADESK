@@ -3,6 +3,8 @@ import { UserPlus, Users, ChevronDown, ChevronRight, X, Building2, User } from "
 import { supabase } from "@/lib/supabaseClient";
 import { todayISO } from "@/lib/date";
 import { hasManyPrincipals } from "@/lib/clientTypes";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 interface Member {
   id: string;
@@ -54,7 +56,8 @@ export function PolicyMembersPanel({
 }) {
   // Many principals, not literally "company": a sacco has the same shape,
   // and a family has members but only one principal.
-  const isCorporate = hasManyPrincipals(clientType as "individual" | "company");
+  const { hasFeature } = useSubscription();
+  const isCorporate = hasManyPrincipals(clientType);
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +103,17 @@ export function PolicyMembersPanel({
     }
     setError(null);
     load();
+  }
+
+  // After the hooks above, so the hook order is stable whether or not the
+  // feature is available.
+  if (!hasFeature("member_schedules")) {
+    return (
+      <UpgradePrompt
+        feature="Dependants and member schedules"
+        description="Record who is covered under each policy: spouses, children, and every employee on a corporate scheme. Included from the Starter plan."
+      />
+    );
   }
 
   if (loading) {

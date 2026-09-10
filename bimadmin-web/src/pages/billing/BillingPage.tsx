@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useApp } from "@/data/appStore";
 import { PaymentPanel } from "@/components/subscription/PaymentPanel";
+import { PeriodToggle } from "@/components/subscription/PeriodToggle";
 import { SubscriptionPlan } from "@/types";
 import { formatDateTime } from "@/lib/date";
 import { supabase } from "@/lib/supabaseClient";
@@ -14,6 +15,7 @@ export function BillingPage() {
   const { plans, currentPlan, subscription, isAdmin, adminPreviewPlanKey, setAdminPreviewPlanKey, refreshSubscription } = useSubscription();
   const store = useApp();
   const [payingPlan, setPayingPlan] = useState<SubscriptionPlan | null>(null);
+  const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [confirmingDowngrade, setConfirmingDowngrade] = useState<SubscriptionPlan | null>(null);
   const [payments, setPayments] = useState<ReturnType<typeof mapPayment>[]>([]);
   const [savedCard, setSavedCard] = useState<ReturnType<typeof mapSavedPaymentMethod> | null>(null);
@@ -126,14 +128,29 @@ export function BillingPage() {
         </div>
       )}
 
+      <div className="flex justify-end mb-3">
+        <PeriodToggle value={period} onChange={setPeriod} />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {plans.map((p) => {
           const isCurrent = p.id === currentPlan?.id;
           return (
             <div key={p.id} className={`wb-card p-4 flex flex-col ${isCurrent ? "border-2 border-violet-400" : ""}`}>
               <p className="text-[14px] font-semibold">{p.name}</p>
-              <p className="text-[20px] font-display mt-1">{p.priceUsdCents === 0 ? "Free" : `$${(p.priceUsdCents / 100).toFixed(0)}`}</p>
-              {p.priceUsdCents > 0 && <p className="text-[11px] text-ink-faint">per month{p.priceKes ? `, about KES ${p.priceKes.toLocaleString()}` : ""}</p>}
+              <p className="text-[20px] font-display mt-1">
+                {p.priceUsdCents === 0
+                  ? "Free"
+                  : period === "yearly"
+                  ? `$${(p.priceUsdCentsYearly / 100).toFixed(0)}`
+                  : `$${(p.priceUsdCents / 100).toFixed(0)}`}
+              </p>
+              {p.priceUsdCents > 0 && (
+                <p className="text-[11px] text-ink-faint">
+                  {period === "yearly"
+                    ? `per year${p.priceKesYearly ? `, about KES ${p.priceKesYearly.toLocaleString()}` : ""}`
+                    : `per month${p.priceKes ? `, about KES ${p.priceKes.toLocaleString()}` : ""}`}
+                </p>
+              )}
               {p.description && <p className="text-[11.5px] text-ink-soft mt-2">{p.description}</p>}
               <ul className="text-[12px] text-ink-soft mt-3 space-y-1.5 flex-1">
                 <li className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> {p.maxClients ? `Up to ${p.maxClients.toLocaleString()} clients` : "Unlimited clients"}</li>
@@ -196,7 +213,10 @@ export function BillingPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[14px] font-medium">Pay for {payingPlan.name}</p>
+              <p className="text-[14px] font-medium">
+                Pay for {payingPlan.name}
+                <span className="text-ink-faint font-normal"> · {period === "yearly" ? "yearly" : "monthly"}</span>
+              </p>
               <button
                 className="wb-btn-ghost !p-1.5"
                 onClick={() => setPayingPlan(null)}
@@ -210,6 +230,7 @@ export function BillingPage() {
             <PaymentPanel
               organizationId={profile.organizationId}
               plan={payingPlan}
+              period={period}
               onPaid={() => {
                 refreshSubscription();
                 setPayingPlan(null);

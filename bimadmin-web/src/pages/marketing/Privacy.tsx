@@ -6,7 +6,7 @@ export function PrivacyPage() {
     <div className="max-w-2xl mx-auto px-5 py-12 space-y-4 text-[14px] text-ink-soft">
       <Link to="/" className="text-violet-600 text-[13px]">Back to BimAdmin</Link>
       <h1 className="font-display text-2xl text-ink">Privacy policy</h1>
-      <p>Last updated when this workspace was created. Replace this page with your own reviewed policy before launch; this is a starting point, not legal advice.</p>
+      <p className="text-ink-faint text-[13px]">Last updated September 2026.</p>
 
       <h2 className="font-display text-lg text-ink pt-2">What we store</h2>
       <p>BimAdmin stores the client, policy, and communication records you enter so you can run your book of business. This includes names, phone numbers, national ID numbers where you choose to record them, and notes you write.</p>

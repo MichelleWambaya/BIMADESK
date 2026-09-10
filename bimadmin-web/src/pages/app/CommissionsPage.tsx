@@ -29,14 +29,15 @@ function today() {
 
 export function CommissionsPage() {
   const store = useApp();
-  const { effectivePlan, isPaidPlan, planResolved } = useSubscription();
+  const { effectivePlan, planResolved, hasFeature } = useSubscription();
+  const allowed = hasFeature("commission_tracking");
   const [rows, setRows] = useState<SummaryRow[]>([]);
   const [from, setFrom] = useState(startOfYear());
   const [to, setTo] = useState(today());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (planResolved && !isPaidPlan) {
+    if (planResolved && !allowed) {
       setLoading(false);
       return;
     }
@@ -44,7 +45,7 @@ export function CommissionsPage() {
       setRows((data as SummaryRow[]) ?? []);
       setLoading(false);
     });
-  }, [from, to, planResolved, isPaidPlan]);
+  }, [from, to, planResolved, allowed]);
 
   const totals = useMemo(() => {
     const commission = rows.reduce((s, r) => s + Number(r.commission_total_kes), 0);
@@ -65,11 +66,11 @@ export function CommissionsPage() {
     [store.policies, from, to]
   );
 
-  if (planResolved && !isPaidPlan) {
+  if (planResolved && !allowed) {
     return (
       <UpgradePrompt
         feature="Commission tracking"
-        description="See what every policy earns you, what has been paid, and what is still owed. Available on any paid plan."
+        description="See what every policy earns you, what has been paid, and what is still owed. Included from the Growth plan."
       />
     );
   }

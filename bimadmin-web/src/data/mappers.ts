@@ -233,6 +233,7 @@ export function mapOrganization(r: any): Organization {
     billingEmail: r.billing_email ?? undefined,
     mpesaPhone: r.mpesa_phone ?? undefined,
     themeColor: r.theme_color ?? "violet",
+    activitiesHiddenBefore: r.activities_hidden_before ?? undefined,
     renewalReminderOffsets: r.renewal_reminder_offsets ?? [90, 60, 30, 14, 7, 3, 1],
     createdAt: r.created_at,
   };
@@ -262,6 +263,8 @@ export function mapPlan(r: any): SubscriptionPlan {
     maxClients: r.max_clients ?? null,
     priceUsdCents: r.price_usd_cents ?? 0,
     priceKes: r.price_kes ?? undefined,
+    priceUsdCentsYearly: r.price_usd_cents_yearly ?? 0,
+    priceKesYearly: r.price_kes_yearly ?? undefined,
     maxPolicies: r.max_policies ?? null,
     maxTeamMembers: r.max_team_members ?? null,
     maxMessagesMonthly: r.max_messages_monthly ?? null,
@@ -269,6 +272,7 @@ export function mapPlan(r: any): SubscriptionPlan {
     bulkImportEnabled: r.bulk_import_enabled,
     trialDays: r.trial_days ?? 0,
     badgeTier: r.badge_tier ?? "bronze",
+    features: r.features ?? [],
     tagline: r.tagline ?? undefined,
     description: r.description ?? undefined,
   };

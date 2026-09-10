@@ -6,6 +6,7 @@ interface Pending {
   id: string;
   organization_name: string;
   plan_name: string;
+  billing_period: "monthly" | "yearly";
   mpesa_code: string;
   amount_claimed_kes: number;
   amount_expected_kes: number;
@@ -125,7 +126,7 @@ export function AdminManualPayments() {
                   <div className="min-w-0">
                     <p className="text-white text-[14px] font-semibold truncate">{r.organization_name}</p>
                     <p className="text-white/45 text-[11.5px] mt-0.5">
-                      {r.plan_name}
+                      {r.plan_name} · {r.billing_period === "yearly" ? "yearly" : "monthly"}
                       {r.submitted_by_name ? ` · submitted by ${r.submitted_by_name}` : ""}
                       {r.paid_at ? ` · paid ${r.paid_at}` : ""}
                     </p>

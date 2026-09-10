@@ -41,6 +41,9 @@ interface SubscriptionContextValue {
    *  previewing a plan. Exposed so callers don't re-derive it and get the
    *  preview case wrong. */
   bypassLimits: boolean;
+  /** Whether the effective plan includes a capability. Admins not in
+   *  preview get everything, so the gate can be checked. */
+  hasFeature: (key: string) => boolean;
   accessState: AccessState;
   trialEndsAt: string | null;
   trialDaysLeft: number | null;
@@ -141,6 +144,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   // So admins bypass limits only when NOT previewing; the moment they
   // pick a plan to preview, that plan's caps apply to them in full.
   const bypassLimits = isAdmin && !isPreviewing;
+  const hasFeature = (key: string) => bypassLimits || (effectivePlan?.features ?? []).includes(key);
 
   const limitReached = (used: number, max: number | null | undefined) =>
     !bypassLimits && max != null && used >= max;
@@ -171,6 +175,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         adminPreviewPlanKey,
         setAdminPreviewPlanKey,
         bypassLimits,
+        hasFeature,
         accessState,
         trialEndsAt,
         trialDaysLeft,

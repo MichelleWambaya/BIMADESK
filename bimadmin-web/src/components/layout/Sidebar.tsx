@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/shared/Logo";
+import { FEATURES } from "@/lib/featureFlags";
 
 /**
  * Grouped, because a flat list of eleven items has no shape and every
@@ -47,7 +48,7 @@ const NAV_GROUPS: {
   {
     label: "Office",
     items: [
-      { to: "/app/communications", label: "Communications", icon: MessageSquare },
+      ...(FEATURES.messaging ? [{ to: "/app/communications", label: "Communications", icon: MessageSquare }] : []),
       { to: "/app/commissions", label: "Commissions", icon: Wallet },
       { to: "/app/reports", label: "Reports", icon: BarChart3 },
       { to: "/app/settings", label: "Settings", icon: Settings },

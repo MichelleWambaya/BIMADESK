@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, TriangleAlert } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 /**
  * Refund policy.
@@ -29,13 +29,6 @@ export function Refunds() {
         <h1 className="font-display text-3xl">Refund policy</h1>
         <p className="text-[13px] text-ink-faint mt-2">Last updated {LAST_UPDATED}</p>
 
-        <div className="mt-6 rounded-[12px] border border-amber-200 bg-amber-50 p-4 flex gap-3">
-          <TriangleAlert size={17} className="text-amber-700 shrink-0 mt-0.5" />
-          <p className="text-[13px] text-amber-900">
-            This policy has not yet been reviewed by a lawyer. It is a working draft and should be checked against
-            Kenyan consumer protection and insurance regulation before you rely on it.
-          </p>
-        </div>
 
         <div className="mt-8 space-y-8 text-[14px] leading-relaxed text-ink-soft">
           <section>

@@ -28,23 +28,26 @@ interface Instructions {
 export function PaymentPanel({
   organizationId,
   plan,
+  period,
   onPaid,
 }: {
   organizationId: string;
   plan: SubscriptionPlan;
+  period: "monthly" | "yearly";
   billingEmail?: string | null;
   onPaid: () => void;
 }) {
   const [instructions, setInstructions] = useState<Instructions | null>(null);
   const [code, setCode] = useState("");
   const [amount, setAmount] = useState("");
-  const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const expected = plan.priceKes ?? 0;
+  const yearly = period === "yearly";
+  const expected = (yearly ? plan.priceKesYearly : plan.priceKes) ?? 0;
+  const usd = yearly ? plan.priceUsdCentsYearly : plan.priceUsdCents;
 
   useEffect(() => {
     supabase.rpc("payment_instructions").then(({ data }) => {
@@ -72,8 +75,9 @@ export function PaymentPanel({
       p_plan_id: plan.id,
       p_mpesa_code: cleanCode,
       p_amount_claimed_kes: Math.round(amountNum),
-      p_paid_from_phone: phone.trim() || null,
+      p_paid_from_phone: null,
       p_paid_at: new Date().toISOString().slice(0, 10),
+      p_billing_period: period,
     });
 
     setSubmitting(false);
@@ -124,13 +128,10 @@ export function PaymentPanel({
 
   return (
     <div className="wb-card p-5 space-y-5">
-      <div>
-        <p className="text-[15px] font-semibold">Pay for {plan.name}</p>
-        <p className="text-[13px] text-ink-soft mt-1">
-          ${(plan.priceUsdCents / 100).toFixed(0)} a month
-          {expected ? <>, which is <strong className="text-ink">KES {expected.toLocaleString()}</strong> today</> : null}
-        </p>
-      </div>
+      <p className="text-[13px] text-ink-soft">
+        ${(usd / 100).toFixed(0)} {yearly ? "for the year" : "a month"}
+        {expected ? <>, which is <strong className="text-ink">KES {expected.toLocaleString()}</strong> today</> : null}
+      </p>
 
       {/* Step 1, pay */}
       <div>
@@ -208,28 +209,24 @@ export function PaymentPanel({
               <Smartphone size={11} />
               The 10-character code at the start of your M-Pesa confirmation message.
             </p>
+            <div className="mt-2 flex items-start gap-2 bg-paper-sunk rounded-[8px] p-2.5">
+              <Clock size={13} className="text-ink-faint shrink-0 mt-0.5" />
+              <p className="text-[11.5px] text-ink-soft">
+                Give it 5 to 10 minutes after paying before you submit. The payment needs to reach our records
+                first, and a code sent too early gets held up.
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="wb-label">Amount paid (KES)</label>
-              <input
-                className="wb-input"
-                type="number"
-                inputMode="numeric"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="wb-label">Paid from (optional)</label>
-              <input
-                className="wb-input"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="07xx xxx xxx"
-              />
-            </div>
+          <div>
+            <label className="wb-label">Amount paid (KES)</label>
+            <input
+              className="wb-input"
+              type="number"
+              inputMode="numeric"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
           </div>
 
           {expected > 0 && Number(amount) > 0 && Math.round(Number(amount)) !== expected && (
@@ -249,8 +246,7 @@ export function PaymentPanel({
           </button>
 
           <p className="text-[11.5px] text-ink-faint">
-            We check each payment by hand against our M-Pesa records, so activation is not instant. On a working day
-            it is usually a few hours.
+            Once submitted, your plan is usually active within a few hours on a working day.
           </p>
         </div>
       </div>

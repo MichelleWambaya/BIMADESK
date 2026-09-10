@@ -40,7 +40,7 @@ const FEATURES = [
   { icon: RefreshCw, title: "Renewals chase themselves", desc: "Every night we check your whole book and tell you which policies are coming due, so none of them quietly lapse." },
   { icon: Users, title: "One place for every client", desc: "Policies, quotes, calls, and notes on a single record, instead of three spreadsheets and a WhatsApp thread." },
   { icon: MessageSquare, title: "Every conversation logged", desc: "Calls, WhatsApp, SMS, and email land on the client's timeline, so you always know what they last heard from you." },
-  { icon: Smartphone, title: "Built for how Kenya pays", desc: "Subscribe with M-Pesa in a few taps. Card works too, and renews automatically if you'd rather not think about it." },
+  { icon: Smartphone, title: "Pay the way you already do", desc: "Subscribe by M-Pesa to our till, in shillings. No card, no foreign charges, no surprises on your statement." },
 ];
 
 // Addresses the objections that actually stop a cautious intermediary
@@ -88,7 +88,7 @@ export function LandingPage() {
 
   return (
     <div className="bg-paper">
-      <header className="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between">
+      <header className="max-w-6xl mx-auto px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8  bg-blue-800 flex items-center justify-center text-white font-display text-[14px]">B<span style={{ color: '#C68A2E' }}>A</span></div>
           <span className="font-display text-[15px]">BimAdmin</span>
@@ -100,36 +100,74 @@ export function LandingPage() {
         </div>
       </header>
 
-      <section className="wb-aurora-bg relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-5 py-24 text-center relative z-10">
+      {/*
+        Hero. The glyph image is the ground; a dark scrim over it keeps the
+        headline readable wherever the ochre marks fall. Copy leads with the
+        outcome (renewals kept) rather than the category (a CRM), because
+        nobody wakes up wanting a CRM and everyone wants the commission
+        from a renewal they would otherwise have missed.
+      */}
+      <section className="relative overflow-hidden wb-hero-image">
+        <div className="absolute inset-0 bg-[#0B1516]/78" />
+        <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-6 pt-16 pb-14 sm:pt-28 sm:pb-24 text-center">
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-[12px] sm:text-[13px] font-semibold text-amber-300 uppercase tracking-[0.18em]"
+          >
+            For insurance intermediaries
+          </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="font-display text-white text-4xl sm:text-5xl leading-tight"
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="font-display text-white text-[34px] leading-[1.08] sm:text-[52px] lg:text-[60px] mt-4 sm:mt-5 max-w-3xl mx-auto"
           >
-            Never miss a policy renewal again
+            Every renewal in your book, chased before it lapses.
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-white/75 text-[16px] mt-5 max-w-2xl mx-auto"
+            transition={{ duration: 0.5, delay: 0.12 }}
+            className="text-white/75 text-[15px] sm:text-[17px] leading-relaxed mt-5 sm:mt-6 max-w-2xl mx-auto"
           >
-            BimAdmin watches every policy in your book and tells you who to call today. Built for Kenyan insurance
-            intermediaries still running everything on spreadsheets and WhatsApp.
+            BimAdmin checks every policy overnight and tells you who to call today. Clients, dependants, quotes and
+            commission in one place, instead of a spreadsheet and a WhatsApp thread.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
           >
-            <Link to="/signup" className="wb-btn-accent px-5 py-2.5 text-[14px]">
-              Start free <ArrowRight size={15} />
+            <Link to="/signup" className="wb-btn-accent px-6 py-3 text-[15px] w-full sm:w-auto justify-center">
+              Start free <ArrowRight size={16} />
             </Link>
-            <span className="text-white/60 text-[13px]">40 clients free. No card needed.</span>
+            <Link
+              to="/login"
+              className="text-white/80 hover:text-white text-[14px] py-3 px-2 w-full sm:w-auto text-center"
+            >
+              Sign in
+            </Link>
           </motion.div>
+          <p className="text-white/50 text-[12.5px] mt-5">
+            Free for 40 clients. Pay by M-Pesa when you grow. No card needed.
+          </p>
+
+          {/* Three proof points under the fold. Concrete verbs, no adjectives. */}
+          <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-3xl mx-auto text-left">
+            {[
+              ["Checked every night", "Every active policy compared against its expiry date, without you asking."],
+              ["Who to call today", "One list each morning: renewals due, promises to chase, tasks owed."],
+              ["Paid in shillings", "Subscribe by M-Pesa, straight from your phone. No card, no foreign charges."],
+            ].map(([title, body]) => (
+              <div key={title} className="rounded-[14px] bg-white/[0.06] border border-white/10 p-4">
+                <p className="text-white text-[13.5px] font-semibold">{title}</p>
+                <p className="text-white/60 text-[12.5px] mt-1 leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -151,8 +189,12 @@ export function LandingPage() {
       </section>
       )}
 
-      <section className="max-w-6xl mx-auto px-5 pb-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <section className="max-w-6xl mx-auto px-5 sm:px-6 py-16 sm:py-24">
+        <div className="text-center mb-10 sm:mb-14">
+          <p className="text-[12px] font-semibold text-violet-600 uppercase tracking-wider mb-3">What it does</p>
+          <h2 className="font-display text-[26px] sm:text-3xl leading-tight">Built around the renewal, not the contact card</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {FEATURES.map((f, i) => (
             <motion.div
               key={f.title}
@@ -160,9 +202,9 @@ export function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="wb-card p-5"
+              className="wb-card p-5 sm:p-6"
             >
-              <div className="w-9 h-9 rounded-[10px] bg-violet-50 flex items-center justify-center text-violet-600 mb-3">
+              <div className="w-10 h-10 rounded-[12px] bg-violet-50 flex items-center justify-center text-violet-600 mb-4">
                 <f.icon size={17} />
               </div>
               <p className="text-[14px] font-semibold">{f.title}</p>
@@ -177,11 +219,11 @@ export function LandingPage() {
       <TestimonialsSection />
 
       <section className="bg-paper-sunk">
-        <div className="max-w-5xl mx-auto px-5 py-20">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 py-16 sm:py-24">
           <div className="text-center mb-10">
             <h2 className="font-display text-2xl">The questions we always get</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
             {OBJECTIONS.map((o) => (
               <div key={o.title}>
                 <div className="w-9 h-9 rounded-[10px] bg-paper-raised border border-line flex items-center justify-center text-violet-600 mb-3">
@@ -202,8 +244,9 @@ export function LandingPage() {
 
       <PricingSection />
 
-      <section className="wb-aurora-bg">
-        <div className="max-w-3xl mx-auto px-5 py-16 text-center">
+      <section className="relative overflow-hidden wb-hero-image">
+        <div className="absolute inset-0 bg-[#0B1516]/82" />
+        <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-6 py-16 sm:py-24 text-center">
           <h2 className="font-display text-white text-2xl">Bring your client list in this afternoon</h2>
           <p className="text-white/70 text-[14px] mt-3">
             Import from Excel, CSV, PDF, or Word. Your first renewal reminders will be ready the same day.
