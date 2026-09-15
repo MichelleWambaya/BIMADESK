@@ -24,7 +24,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen wb-aurora-bg flex items-center justify-center p-4">
+    <div className="min-h-screen wb-hero-image flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <div className="inline-flex mb-3">
